@@ -12,6 +12,7 @@ printshop brick 2x4 brick.stl       # a 2x4 brick (--plates 1 for a plate)
 pip install -e .[rabbitstew]        # optional: rabbitstew (from git) + MuJoCo 3.14.0
 printshop champion RBT-19-P-801 holistic 590 examples/   # a champion posed on a plinth
 printshop jointed RBT-19-P-801 holistic 590 examples/    # the champion with printed joints, print-in-place
+printshop burrito madison examples/                      # a Chaotic Attack burrito on a stud-grid base, in colour
 python -m pytest
 ```
 
@@ -33,6 +34,9 @@ and a shaded PNG preview.
 | `motion.py` | Checks for articulated figures: one piece each, gaps, capture, sweeps; posing. |
 | `orient.py` | Which way up to print: least support for the most bed contact; flat feet. |
 | `sources/rabbitstew_jointed.py` | Rabbitstew champions with every MuJoCo joint as a printed joint. |
+| `colour.py` | Merge a model's colours down to the printer's filament slots (Ward linkage in CIELAB). |
+| `sources/burritos.py` | Chaotic Attack burritos: parts to solids, fused, on a stud-grid base, split by colour. |
+| `tools/burrito-export/` | Node script that builds burritos headlessly (no renderer) and dumps their parts. |
 | `sources/rabbitstew.py` | Rabbitstew champions: re-simulate a solo bout, take the pose, every unit a solid, fused onto a plinth. |
 
 Tests check that bricks are one solid at nominal size, that joint parts are separate with exactly the
@@ -102,6 +106,35 @@ uncarved shapes would overlap the trunk by 2.8 cm³ (big sphere), 1.8 cm³ (sphe
 The carving removed that: the trunk keeps 88% of its volume, the big sphere 99%, the sphere pair 96% and the
 disc 86%. The `.json` beside the example has all of it (`checks.honesty`).
 
+## Burritos
+
+`printshop burrito KIND OUT_DIR` makes a Chaotic Attack burrito that stands on brick plates. The parts come
+from `tools/burrito-export` (see its README): `buildBurrito()` run in Node with no renderer, every visible
+mesh dumped as world-space triangles with a representative colour (a canvas texture's dominant paint). Four
+are bundled, in their hero costumes: Madison (the default burrito), Yuri Dessert, Sebastian and Firework Baby.
+
+- Closed meshes are used as they are. Open one-sided meshes (Sebastian's crayon squiggles, every smile's half
+  torus) are the outside of a solid, so their ends are capped. Double-sided meshes, three.js's sheets (the
+  capes), are thickened to `min_wall`. Anything thinner than `min_wall` (sprinkles, eyelashes) is fattened
+  across its thin direction.
+- The parts are fused into one figure (anything floating is bridged) at 22 mm per three.js unit, so a
+  full-size burrito is about 52 mm tall and the juniors are pint-sized.
+- It sits in a base whose underside is a plate's (hollow, with tubes), so it presses onto studs. The base is
+  as many studs as cover the wrap, and its top is thick enough for the wrap, not just the toes, to sit in.
+- Colours are merged down to `--slots` (default 4, one AMS) by Ward linkage on the square root of each colour's
+  area, so a pupil still counts against a wrap. Smaller parts claim their volume first (pupils on eyes on the
+  wrap). The 3MF is one object with a part per colour, for a filament each; the STL is the whole figure.
+
+| Burrito | Parts | Colours | Prints in | Base | Size (mm) |
+|---|---|---|---|---|---|
+| Madison | 15 | 10 | tan, foil grey, salsa red, sunglasses black | 4 x 4 | 32 x 32 x 52 |
+| Yuri Dessert | 28 | 12 | tortilla, frosting pink, cherry red, pupil black | 4 x 4 | 32 x 32 x 52 |
+| Sebastian | 29 | 16 | paper, crayon blue, crayon red, feet tan | 4 x 4 | 32 x 32 x 58 |
+| Firework Baby | 40 | 12 | wrap, hot pink, lash black, feet tan | 3 x 3 | 24 x 28 x 42 |
+
+All four are one piece and stand (the centre of mass is 12-16 mm inside the base's edge). The capes clip
+through the wraps, as they do in the game.
+
 ## Calibrating a printer
 
 1. Print `printshop card` and `printshop joints` with the starting profile.
@@ -114,9 +147,7 @@ disc 86%. The `.json` beside the example has all of it (`checks.honesty`).
 
 1. ~~Rabbitstew champions as figurines~~ (`printshop champion`).
 2. ~~Jointed rabbitstew champions~~ (`printshop jointed`).
-3. **Burritos.** Export Chaotic Attack characters from `buildBurrito()` (three.js primitives) as parts and
-   colours, thicken zero-thickness planes, fuse, and give them a socket base that fits the stud grid, so they
-   stand on a plate. Multi-colour 3MF.
+3. ~~Burritos~~ (`printshop burrito`). The other seventeen kinds export too; only four are bundled.
 4. **Brick-system figures and accessories.** Hands that grip the 3.2 mm bar, accessories built on that bar,
    heads on studs, hip pins.
 5. **Stability in MuJoCo** for posed figures: drop the print onto a floor and see whether it stays up.

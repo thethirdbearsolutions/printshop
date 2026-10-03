@@ -1,0 +1,70 @@
+{
+  "kind": "madison",
+  "name": "Madison",
+  "hero": true,
+  "mm_per_unit": 22.0,
+  "parts": 15,
+  "made": {
+    "closed": [
+      "capsule0",
+      "sphere1",
+      "sphere2",
+      "sphere3",
+      "cylinder4",
+      "sphere5",
+      "sphere6",
+      "box7",
+      "sphere8",
+      "sphere9",
+      "box10",
+      "sphere13",
+      "sphere14"
+    ],
+    "closed+fattened": [
+      "box11"
+    ],
+    "capped": [
+      "torus12"
+    ]
+  },
+  "colours_in_model": 10,
+  "slots": 4,
+  "printed_colours": [
+    "#14161c",
+    "#c8ccd4",
+    "#d44a2e",
+    "#e8c990"
+  ],
+  "colour_map": {
+    "#e8c990": "#e8c990",
+    "#f2e2b0": "#e8c990",
+    "#d9b878": "#e8c990",
+    "#6fae4a": "#e8c990",
+    "#d44a2e": "#d44a2e",
+    "#7a3020": "#d44a2e",
+    "#c8ccd4": "#c8ccd4",
+    "#ffffff": "#c8ccd4",
+    "#14161c": "#14161c",
+    "#1a1418": "#14161c"
+  },
+  "base_studs": [
+    4,
+    4
+  ],
+  "base_centre_mm": [
+    0.0,
+    0.0
+  ],
+  "check": {
+    "pieces": 1,
+    "genus": 1,
+    "volume_cm3": 24.63,
+    "size_mm": [
+      31.8,
+      31.8,
+      51.8
+    ],
+    "stands": true,
+    "stability_margin_mm": 15.75
+  }
+}

@@ -57,16 +57,18 @@ def strut(p, q, radius: float, segments: int = 24) -> Manifold:
     return place(cylinder(length + 2 * radius, radius, segments=segments), rot, p - z * radius)
 
 
-def closest_points(a: Manifold, b: Manifold):
-    va = a.to_mesh().vert_properties[:, :3]
-    vb = b.to_mesh().vert_properties[:, :3]
+def closest_points(a: Manifold, b: Manifold, chunk: int = 256):
+    """The closest pair of vertices, one on each solid (memory stays at chunk x len(b))."""
+    va = a.to_mesh().vert_properties[:, :3].astype(float)
+    vb = b.to_mesh().vert_properties[:, :3].astype(float)
+    nb = (vb * vb).sum(1)
     best = (np.inf, None, None)
-    for i in range(0, len(va), 2048):
-        chunk = va[i:i + 2048]
-        dist = np.linalg.norm(chunk[:, None, :] - vb[None, :, :], axis=2)
-        j = np.unravel_index(np.argmin(dist), dist.shape)
-        if dist[j] < best[0]:
-            best = (dist[j], chunk[j[0]], vb[j[1]])
+    for i in range(0, len(va), chunk):
+        part = va[i:i + chunk]
+        d2 = (part * part).sum(1)[:, None] + nb[None, :] - 2 * part @ vb.T
+        j = np.unravel_index(np.argmin(d2), d2.shape)
+        if d2[j] < best[0]:
+            best = (d2[j], part[j[0]], vb[j[1]])
     return best[1], best[2]
 
 

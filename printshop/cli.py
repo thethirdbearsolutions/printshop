@@ -5,6 +5,7 @@
     printshop joints OUT_DIR [--profile fdm-0.4]         print-in-place hinge and ball joint test pieces
     printshop champion RUN KIND GEN OUT_DIR [--seed 3]   a rabbitstew champion posed on a plinth (needs the extra)
     printshop jointed RUN KIND GEN OUT_DIR [--mm M]      the champion with printed joints, laid out to print in place
+    printshop burrito KIND OUT_DIR [--slots 4]           a Chaotic Attack burrito on a stud-grid base, in colour
 """
 from __future__ import annotations
 
@@ -47,6 +48,12 @@ def main(argv=None) -> None:
         jt.add_argument(arg)
     jt.add_argument("gen", type=int); jt.add_argument("out"); jt.add_argument("--profile", default="fdm-0.4")
     jt.add_argument("--mm", type=float, default=None, help="mm per model metre (default: smallest that fits)")
+    bu = sub.add_parser("burrito")
+    bu.add_argument("kind", help="a bundled kind (madison, yuri, sebastian, firework) or an exporter .json.gz")
+    bu.add_argument("out"); bu.add_argument("--profile", default="fdm-0.4")
+    bu.add_argument("--slots", type=int, default=4, help="filament colours the printer holds")
+    bu.add_argument("--mm", type=float, default=22.0, help="mm per three.js unit")
+    bu.add_argument("--no-hero", action="store_true", help="without the earned costume")
     a = ap.parse_args(argv)
     profile = PROFILES[a.profile]
 
@@ -75,6 +82,17 @@ def main(argv=None) -> None:
         _provenance(stem, info, body)
     elif a.cmd == "jointed":
         _jointed(a, profile)
+    elif a.cmd == "burrito":
+        from .sources import burritos
+
+        os.makedirs(a.out, exist_ok=True)
+        fig = burritos.figure(burritos.load(a.kind, hero=not a.no_hero), profile, a.mm, a.slots)
+        stem = os.path.join(a.out, f"burrito-{fig.info['kind']}")
+        write_stl(fig.solid, stem + ".stl")
+        write_3mf(fig.colours, stem + ".3mf", assembly=fig.name)
+        render([(m, c) for _, m, c in fig.colours], stem + ".png", azimuth=-70, elevation=20)
+        print(f"wrote {stem}.stl / .3mf / .png")
+        _provenance(stem, fig.info, fig.solid)
 
 
 def _jointed(a, profile) -> None:

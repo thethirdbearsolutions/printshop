@@ -1,0 +1,10 @@
+{
+  "name": "printshop-burrito-export",
+  "private": true,
+  "type": "module",
+  "description": "Builds Chaotic Attack burritos headlessly and dumps their parts for printshop",
+  "engines": { "node": ">=22.6" },
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}

@@ -33,9 +33,11 @@ def write_stl(parts, path: str, header: str = "printshop") -> int:
     return len(tri)
 
 
-def write_3mf(objects, path: str) -> None:
+def write_3mf(objects, path: str, assembly: str | None = None) -> None:
     """objects: list of (name, Manifold, "#RRGGBB" or None). Each becomes its own object, so a
-    multi-colour printer can give each its own filament and a slicer can arrange them."""
+    multi-colour printer can give each its own filament and a slicer can arrange them. With
+    `assembly`, they are instead the parts of one object of that name, kept where they are
+    (a multi-colour figure: one part per filament)."""
     colours = sorted({c for _, _, c in objects if c})
     cidx = {c: i for i, c in enumerate(colours)}
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
@@ -54,6 +56,11 @@ def write_3mf(objects, path: str) -> None:
         out.append("".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in t))
         out.append("</triangles></mesh></object>")
         build.append(f'<item objectid="{k}"/>')
+    if assembly:
+        k = len(objects) + 2
+        out.append(f'<object id="{k}" name="{assembly}" type="model"><components>'
+                   + "".join(f'<component objectid="{i}"/>' for i in range(2, k)) + "</components></object>")
+        build = [f'<item objectid="{k}"/>']
     out += ["</resources>", "<build>" + "".join(build) + "</build>", "</model>"]
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("[Content_Types].xml",

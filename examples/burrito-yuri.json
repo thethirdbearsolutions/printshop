@@ -1,0 +1,87 @@
+{
+  "kind": "yuri",
+  "name": "Yuri Dessert",
+  "hero": true,
+  "mm_per_unit": 22.0,
+  "parts": 28,
+  "made": {
+    "closed": [
+      "capsule0",
+      "sphere1",
+      "sphere2",
+      "sphere3",
+      "sphere4",
+      "sphere19",
+      "sphere20",
+      "sphere21",
+      "sphere22",
+      "sphere23",
+      "sphere26",
+      "sphere27"
+    ],
+    "closed+fattened": [
+      "capsule5",
+      "capsule6",
+      "capsule7",
+      "capsule8",
+      "capsule9",
+      "capsule10",
+      "capsule11",
+      "capsule12",
+      "capsule13",
+      "capsule14",
+      "capsule15",
+      "capsule16",
+      "capsule17",
+      "capsule18"
+    ],
+    "capped": [
+      "torus24"
+    ],
+    "thickened": [
+      "plane25"
+    ]
+  },
+  "colours_in_model": 12,
+  "slots": 4,
+  "printed_colours": [
+    "#1a1418",
+    "#d41f3a",
+    "#f2d9a8",
+    "#ff9ecb"
+  ],
+  "colour_map": {
+    "#f2d9a8": "#f2d9a8",
+    "#fff3b0": "#f2d9a8",
+    "#d9b878": "#f2d9a8",
+    "#ffe135": "#f2d9a8",
+    "#ffffff": "#f2d9a8",
+    "#34c759": "#f2d9a8",
+    "#ff9ecb": "#ff9ecb",
+    "#b884e0": "#ff9ecb",
+    "#32ade6": "#ff9ecb",
+    "#d41f3a": "#d41f3a",
+    "#ff3b30": "#d41f3a",
+    "#1a1418": "#1a1418"
+  },
+  "base_studs": [
+    4,
+    4
+  ],
+  "base_centre_mm": [
+    0.0,
+    0.0
+  ],
+  "check": {
+    "pieces": 1,
+    "genus": 0,
+    "volume_cm3": 22.56,
+    "size_mm": [
+      31.8,
+      31.8,
+      51.8
+    ],
+    "stands": true,
+    "stability_margin_mm": 15.81
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "kind": "firework",
+  "name": "Firework Baby",
+  "hero": true,
+  "mm_per_unit": 22.0,
+  "parts": 40,
+  "made": {
+    "closed": [
+      "capsule0",
+      "sphere1",
+      "sphere2",
+      "sphere3",
+      "sphere4",
+      "sphere5",
+      "cone6",
+      "sphere7",
+      "sphere8",
+      "cone9",
+      "sphere10",
+      "sphere11",
+      "cone12",
+      "cylinder21",
+      "spark",
+      "cone23",
+      "cone24",
+      "sphere25",
+      "octahedron27",
+      "sphere29",
+      "sphere30",
+      "sphere31",
+      "sphere32",
+      "sphere35",
+      "sphere36",
+      "cone37",
+      "sphere38",
+      "sphere39"
+    ],
+    "closed+fattened": [
+      "sphere13",
+      "box14",
+      "box15",
+      "box16",
+      "sphere17",
+      "box18",
+      "box19",
+      "box20",
+      "octahedron26",
+      "octahedron28"
+    ],
+    "capped": [
+      "torus33"
+    ],
+    "thickened": [
+      "plane34"
+    ]
+  },
+  "colours_in_model": 12,
+  "slots": 4,
+  "printed_colours": [
+    "#2a1e28",
+    "#d9b878",
+    "#f5e4cf",
+    "#ff5a8f"
+  ],
+  "colour_map": {
+    "#f5e4cf": "#f5e4cf",
+    "#f2c4cc": "#f5e4cf",
+    "#ffffff": "#f5e4cf",
+    "#2a1e28": "#2a1e28",
+    "#1a1418": "#2a1e28",
+    "#54382a": "#2a1e28",
+    "#ff5a8f": "#ff5a8f",
+    "#c4566a": "#ff5a8f",
+    "#ff9ecb": "#ff5a8f",
+    "#d41f3a": "#ff5a8f",
+    "#d9b878": "#d9b878",
+    "#ffe24a": "#d9b878"
+  },
+  "base_studs": [
+    3,
+    3
+  ],
+  "base_centre_mm": [
+    0.0,
+    0.0
+  ],
+  "check": {
+    "pieces": 1,
+    "genus": 0,
+    "volume_cm3": 10.2,
+    "size_mm": [
+      23.8,
+      28.1,
+      42.1
+    ],
+    "stands": true,
+    "stability_margin_mm": 11.73
+  }
+}

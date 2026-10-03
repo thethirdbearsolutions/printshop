@@ -1,0 +1,90 @@
+{
+  "kind": "sebastian",
+  "name": "Sebastian",
+  "hero": true,
+  "mm_per_unit": 22.0,
+  "parts": 29,
+  "made": {
+    "closed": [
+      "capsule0",
+      "sphere1",
+      "sphere2",
+      "sphere3",
+      "cylinder10",
+      "cone11",
+      "cone12",
+      "cylinder13",
+      "cylinder14",
+      "cylinder15",
+      "cone16",
+      "cylinder17",
+      "cone18",
+      "cylinder19",
+      "cone20",
+      "sphere21",
+      "sphere22",
+      "sphere23",
+      "sphere24",
+      "sphere27",
+      "sphere28"
+    ],
+    "capped": [
+      "tube4",
+      "tube5",
+      "tube6",
+      "tube7",
+      "tube8",
+      "tube9",
+      "torus25"
+    ],
+    "thickened": [
+      "plane26"
+    ]
+  },
+  "colours_in_model": 16,
+  "slots": 4,
+  "printed_colours": [
+    "#2f6fff",
+    "#d9b878",
+    "#fdf3df",
+    "#ff3b30"
+  ],
+  "colour_map": {
+    "#fdf3df": "#fdf3df",
+    "#ffffff": "#fdf3df",
+    "#b8bcc4": "#fdf3df",
+    "#ff3b30": "#ff3b30",
+    "#ff2f9e": "#ff3b30",
+    "#ff8fa8": "#ff3b30",
+    "#1a1418": "#ff3b30",
+    "#2a2a30": "#ff3b30",
+    "#2f6fff": "#2f6fff",
+    "#8f5aff": "#2f6fff",
+    "#d9b878": "#d9b878",
+    "#e8cfa0": "#d9b878",
+    "#ffe135": "#d9b878",
+    "#ffc72c": "#d9b878",
+    "#ffb03a": "#d9b878",
+    "#34c759": "#d9b878"
+  },
+  "base_studs": [
+    4,
+    4
+  ],
+  "base_centre_mm": [
+    0.0,
+    0.0
+  ],
+  "check": {
+    "pieces": 1,
+    "genus": 18,
+    "volume_cm3": 22.08,
+    "size_mm": [
+      31.8,
+      31.8,
+      57.9
+    ],
+    "stands": true,
+    "stability_margin_mm": 15.86
+  }
+}
