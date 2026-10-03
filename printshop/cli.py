@@ -4,6 +4,7 @@
     printshop brick WxL OUT.stl [--plates 3]             one brick (3 plates) or plate (1)
     printshop joints OUT_DIR [--profile fdm-0.4]         print-in-place hinge and ball joint test pieces
     printshop champion RUN KIND GEN OUT_DIR [--seed 3]   a rabbitstew champion posed on a plinth (needs the extra)
+    printshop jointed RUN KIND GEN OUT_DIR [--mm M]      the champion with printed joints, laid out to print in place
 """
 from __future__ import annotations
 
@@ -41,6 +42,11 @@ def main(argv=None) -> None:
     ch.add_argument("--seed", type=int, default=3); ch.add_argument("--time", type=float, default=None)
     ch.add_argument("--length", type=float, default=90.0); ch.add_argument("--min-wall", type=float, default=None)
     ch.add_argument("--plinth", type=float, default=4.0)
+    jt = sub.add_parser("jointed")
+    for arg in ("run", "kind"):
+        jt.add_argument(arg)
+    jt.add_argument("gen", type=int); jt.add_argument("out"); jt.add_argument("--profile", default="fdm-0.4")
+    jt.add_argument("--mm", type=float, default=None, help="mm per model metre (default: smallest that fits)")
     a = ap.parse_args(argv)
     profile = PROFILES[a.profile]
 
@@ -67,6 +73,27 @@ def main(argv=None) -> None:
         stem = os.path.join(a.out, f"champion-{champ.name}")
         _emit([(champ.name, body)], stem)
         _provenance(stem, info, body)
+    elif a.cmd == "jointed":
+        _jointed(a, profile)
+
+
+def _jointed(a, profile) -> None:
+    from .motion import check_poses, posed, report
+    from .orient import lay_flat
+    from .sources import rabbitstew
+    from .sources.rabbitstew_jointed import jointed
+
+    os.makedirs(a.out, exist_ok=True)
+    champ = rabbitstew.load(a.run, a.kind, a.gen)
+    fig, info = jointed(champ, profile, a.mm)
+    laid, layout = lay_flat(fig.solids)
+    stem = os.path.join(a.out, f"jointed-{champ.name}")
+    _emit(list(laid.items()), stem)
+    ends = {j.name: check_poses(fig, j, 2)[-1] for j in fig.joints}  # every joint at the end of its range
+    render([(m, PALETTE[i % len(PALETTE)]) for i, m in enumerate(posed(fig, ends).values())], stem + "-posed.png")
+    with open(stem + ".json", "w") as f:
+        json.dump(dict(info, checks=report(fig), layout=layout), f, indent=2, default=str)
+    print(f"wrote {stem}.json / -posed.png")
 
 
 def _provenance(stem: str, info: dict, body) -> None:

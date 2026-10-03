@@ -1,0 +1,117 @@
+{
+  "name": "rbt-19-p-801-holistic-g590",
+  "mm_per_model_m": 113.65,
+  "thinnest_jointed_part_m": 0.1186,
+  "joints": {
+    "r0_j1": {
+      "type": "ball",
+      "ball_radius": 4.5,
+      "neck_radius": 2.02,
+      "housing_mm": 12.9,
+      "cone_deg": 26.5,
+      "cone_max_deg": 26.5,
+      "parent_half_thickness_mm": 6.74,
+      "child_depth_mm": 47.92,
+      "kind": "ball",
+      "sim_range": null
+    },
+    "r0_j3": {
+      "type": "hinge",
+      "pin_radius": 2.0,
+      "knuckle_radius": 3.55,
+      "housing_mm": 10.2,
+      "length_mm": 15.0,
+      "stops_deg": [
+        -36.6,
+        36.6
+      ],
+      "parent_half_thickness_mm": 11.8,
+      "child_depth_mm": 23.17,
+      "kind": "hinge",
+      "sim_range": [
+        -0.6389,
+        0.6389
+      ]
+    },
+    "r0_j4": {
+      "type": "ball",
+      "ball_radius": 2.49,
+      "neck_radius": 1.2,
+      "housing_mm": 8.88,
+      "cone_deg": 12.8,
+      "cone_max_deg": 12.8,
+      "parent_half_thickness_mm": 11.8,
+      "child_depth_mm": 5.99,
+      "kind": "ball",
+      "sim_range": null
+    }
+  },
+  "checks": {
+    "pieces": {
+      "b1": 1,
+      "b2": 1,
+      "b4": 1,
+      "b6": 1
+    },
+    "min_gap_mm": 0.35,
+    "clearance_mm": 0.35,
+    "joints": {
+      "r0_j1": {
+        "kind": "ball",
+        "captured": true,
+        "max_overlap_mm3": 0.0,
+        "simulated_overlap_mm3": 2791.4
+      },
+      "r0_j3": {
+        "kind": "hinge",
+        "captured": true,
+        "max_overlap_mm3": 0.0,
+        "simulated_overlap_mm3": 1842.5
+      },
+      "r0_j4": {
+        "kind": "ball",
+        "captured": true,
+        "max_overlap_mm3": 0.0,
+        "simulated_overlap_mm3": 597.1
+      }
+    },
+    "honesty": {
+      "simulated_rest_overlap_mm3": {
+        "b1/b2": 560.4,
+        "b1/b4": 566.3,
+        "b1/b6": 537.2
+      },
+      "volume_kept": {
+        "b1": 0.878,
+        "b2": 0.985,
+        "b4": 0.962,
+        "b6": 0.861
+      }
+    }
+  },
+  "layout": {
+    "down": [
+      0.0,
+      -0.07,
+      1.0
+    ],
+    "support_mm2": 2245.5,
+    "bed_contact_mm2": 763.3,
+    "flat_mm": 1.0,
+    "on_bed": [
+      "b1",
+      "b4"
+    ],
+    "trimmed_mm3": {
+      "b1": 342.7,
+      "b2": 0.0,
+      "b4": 34.9,
+      "b6": 0.0
+    },
+    "size_mm": [
+      127.7,
+      63.5,
+      73.5
+    ]
+  }
+}
