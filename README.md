@@ -14,6 +14,7 @@ printshop champion RBT-19-P-801 holistic 590 examples/   # a champion posed on a
 printshop jointed RBT-19-P-801 holistic 590 examples/    # the champion with printed joints, print-in-place
 printshop burrito madison examples/                      # a Chaotic Attack burrito on a stud-grid base, in colour
 printshop figure examples/                               # a brick-system figure and accessories for its hands
+printshop knight examples/                               # sword, shield, helmet, armour, and a Pegasus to ride
 printshop drop examples/burrito-madison.stl              # does it stay up? MuJoCo drop test (pip install -e .[sim])
 printshop stand RBT-19-P-801 holistic 590 examples/      # which pose of the jointed champion stands up?
 python -m pytest
@@ -41,6 +42,9 @@ and a shaded PNG preview.
 | `accessories.py` | Things to hold, built on the bar: a plain bar, a star wand, a hand mirror, a horseshoe magnet. |
 | `stand.py` | A cradle that holds a figure in a pose it cannot keep by itself. |
 | `stability.py` | Does a posed figure stay up? MuJoCo drop tests, settling, the static tip angle, pose search. |
+| `armory.py` | Sword and shield on the bar, a helmet that grips the head's stud, armour that drops over the neck stud. |
+| `pegasus.py` | A winged horse with a two-stud saddle; wings on pins that sweep, and print flat. |
+| `scenes.py` | The figure kitted out, and riding: assembled scenes for previews and fit tests. |
 | `colour.py` | Merge a model's colours down to the printer's filament slots (Ward linkage in CIELAB). |
 | `sources/burritos.py` | Chaotic Attack burritos: parts to solids, fused, on a stud-grid base, split by colour. |
 | `tools/burrito-export/` | Node script that builds burritos headlessly (no renderer) and dumps their parts. |
@@ -162,6 +166,32 @@ Tests check the printed sizes (holes come out `xy_compensation` smaller, pegs bi
 drop out of a hand, that the legs swing ±90° on the hips and the arms all the way round without touching
 anything, that the figure stands on a 2x2 plate, and that a retuned profile (a 3.0 mm bar, say) changes
 every fit.
+
+## Knight and Pegasus
+
+`printshop knight OUT_DIR` writes the armoury laid out to print (`armoury-<profile>.*`), the Pegasus
+(`pegasus-<profile>.*`: the horse standing on its hooves, the wings flat), `knight.png`, and `rider.png` /
+`rider.stl` (assembled, for `printshop drop`).
+
+- **Sword:** its grip is the bar, so any hand built for the 3.2 mm bar holds it. Gold pommel and crossguard,
+  steel blade.
+- **Shield:** a round red shield with a gold rim and star. Behind it, a length of bar on two posts, far enough
+  out for a hand's clip to close round it.
+- **Helmet:** slides over the domed head (`joint_clearance` all round) and grips the stud on the head's top
+  with a stud socket. It has an eye slit and a red crest, and lifts straight off.
+- **Armour:** a yoke with a loose hole over the neck stud, a breastplate with a gold star, and a backplate.
+  The head clamps it down (it raises the head 0.8 mm).
+- **Pegasus:** 11 g, 76 mm nose to tail. The saddle has two studs one pitch apart. The figure swings its legs
+  forward and sits on them, by a stud socket in the back of each leg. Each wing's pin turns in a hole in the
+  shoulder with the hips' `pin_fit`, so the wings sweep ±45° and stay where they are put. The pins tip down
+  25°, so the wings lean out but still print flat, pin up. The shoulders are cut away (with `joint_clearance`)
+  wherever a wing's root passes.
+
+Tests check that nothing in the kitted-out knight or the riding scene runs into anything (a hand may squeeze
+its grip by `clip_fit`). They also check that the helmet sits on the stud and comes off only upwards, that the
+head holds the armour down, that the figure sits on the saddle's studs and cannot slide off, and that the wings
+sweep without touching the horse. Placed from 10 mm with a 5° lean, the Pegasus and its rider stay up 8 of 8
+(tip angle 14.7°). Dropped from 20 mm, the bare Pegasus falls once in 8: it lands on two hooves and bounces over.
 
 ## Does it stay up?
 

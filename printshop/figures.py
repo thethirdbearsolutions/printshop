@@ -6,7 +6,8 @@
     arm    a shoulder pin, and a hand: a C clip that grips the bar (profile.pin_diameter)
     hips   a stud on top; underneath, a keel between the legs carrying the hip pin
     leg    a hole in its inner face turns on the hip pin; a stud socket in the foot. The two
-           feet are one pitch apart, so the figure stands on a plate
+           feet are one pitch apart, so the figure stands on a plate; another socket in the
+           back of each leg lets it sit on studs with its legs swung forward
 
 The shapes are printshop's own. Sizes below are proportions; every fit (stud, socket,
 pin, hole, clip, clearance) comes from the profile, so a calibrated profile retunes them all.
@@ -26,6 +27,7 @@ TORSO_H, TORSO_W, TORSO_ROUND = 11.0, 14.4, 2.4  # a rounded barrel, straight-si
 HEAD_D, HEAD_H = 9.6, 8.8
 ARM_R, ARM_LEN = 2.0, 10.0
 PIN_IN = 3.0  # how far a pin goes into its hole
+SEAT_Z = 5.3  # height of the stud socket in the back of each leg: legs swung forward, the figure sits on studs
 CLIP_LEN = 3.2  # along the bar
 
 
@@ -91,6 +93,8 @@ def leg(p: Profile = FDM_04, side: int = 1) -> Manifold:
     m -= span(inner - 1, L.keel + L.c, -DEPTH, DEPTH, notch_floor, LEG_H + 1)
     m -= along_x(L.keel + L.c - 0.01, L.keel + L.c + PIN_IN + 0.3, hole_radius(p), z=L.hip_axis)
     m -= socket(p, p.stud_height + 0.3).translate([p.pitch / 2, 0, 0])
+    seat = socket(p, p.stud_height + 0.1).rotate([90, 0, 0])  # opens towards +y, the back
+    m -= seat.translate([p.pitch / 2, DEPTH / 2, SEAT_Z])
     return m if side > 0 else m.mirror([1, 0, 0])
 
 
@@ -174,14 +178,18 @@ def rotate_about_x(m: Manifold, deg: float, z: float) -> Manifold:
     return m.translate([0, 0, -z]).rotate([deg, 0, 0]).translate([0, 0, z])
 
 
-def plate_layout(groups: dict, gap: float = 4.0) -> list:
-    """Lay each group (name -> list of (part, Manifold, colour)) the least-support way up, side by side
-    along x on z = 0, nothing trimmed. Returns (part, Manifold, colour) for a 3MF."""
+def plate_layout(groups: dict, gap: float = 4.0, orient: bool = True) -> list:
+    """Lay each group (name -> list of (part, Manifold, colour)) side by side along x on z = 0, nothing
+    trimmed: turned the least-support way up, or (orient=False) as given. Returns (part, Manifold, colour)."""
     from .orient import lay_flat
 
     out, x = [], 0.0
     for parts in groups.values():
-        laid, _ = lay_flat({n: m for n, m, _ in parts}, flat=0.0)
+        if orient:
+            laid, _ = lay_flat({n: m for n, m, _ in parts}, flat=0.0)
+        else:
+            z0 = min(m.bounding_box()[2] for _, m, _ in parts)
+            laid = {n: m.translate([0, 0, -z0]) for n, m, _ in parts}
         lo = np.min([np.array(m.bounding_box())[:3] for m in laid.values()], axis=0)
         hi = np.max([np.array(m.bounding_box())[3:] for m in laid.values()], axis=0)
         for n, _, c in parts:

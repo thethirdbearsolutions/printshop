@@ -91,3 +91,9 @@ def sit_on_bed(m: Manifold) -> Manifold:
     """Centre in x/y and put the lowest point on z = 0."""
     lo, hi = bounds(m)
     return m.translate([-(lo[0] + hi[0]) / 2, -(lo[1] + hi[1]) / 2, -lo[2]])
+
+
+def drop_slivers(m: Manifold, min_volume: float = 0.01) -> Manifold:
+    """The solid without the zero-volume chips booleans leave behind where surfaces nearly meet."""
+    keep = [p for p in m.decompose() if p.volume() > min_volume]
+    return _sum(keep) if keep else Manifold()

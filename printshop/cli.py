@@ -7,6 +7,7 @@
     printshop jointed RUN KIND GEN OUT_DIR [--mm M]      the champion with printed joints, laid out to print in place
     printshop burrito KIND OUT_DIR [--slots 4]           a Chaotic Attack burrito on a stud-grid base, in colour
     printshop figure OUT_DIR [--profile fdm-0.4]         a brick-system figure and its bar accessories
+    printshop knight OUT_DIR [--profile fdm-0.4]         sword, shield, helmet, armour, and a Pegasus to ride
     printshop drop FILE.stl [--trials 8 --height 20]     does it stay up? a MuJoCo drop test (needs mujoco)
     printshop stand RUN KIND GEN OUT_DIR                 which pose of a jointed champion stands up?
 """
@@ -54,6 +55,7 @@ def main(argv=None) -> None:
     jt.add_argument("gen", type=int); jt.add_argument("out"); jt.add_argument("--profile", default="fdm-0.4")
     jt.add_argument("--mm", type=float, default=None, help="mm per model metre (default: smallest that fits)")
     fg = sub.add_parser("figure"); fg.add_argument("out"); fg.add_argument("--profile", default="fdm-0.4")
+    kn = sub.add_parser("knight"); kn.add_argument("out"); kn.add_argument("--profile", default="fdm-0.4")
     dr = sub.add_parser("drop"); dr.add_argument("stl"); dr.add_argument("--trials", type=int, default=8)
     dr.add_argument("--height", type=float, default=20.0, help="mm above the floor")
     dr.add_argument("--tilt", type=float, default=5.0, help="degrees of lean, in a random direction each trial")
@@ -110,6 +112,8 @@ def main(argv=None) -> None:
         print(json.dumps(r, indent=2, default=float))
     elif a.cmd == "stand":
         _stand(a, profile)
+    elif a.cmd == "knight":
+        _knight(a.out, profile)
     elif a.cmd == "figure":
         _figure(a.out, profile)
     elif a.cmd == "burrito":
@@ -167,6 +171,25 @@ def _stand(a, profile) -> None:
     with open(stem + ".json", "w") as f:
         json.dump(r, f, indent=2, default=float)
     print(json.dumps({k: v for k, v in r.items() if k != "settle_deg"}, default=float))
+
+
+def _knight(out: str, profile) -> None:
+    from . import figures, scenes
+    from .armory import armoury
+    from .pegasus import pegasus
+
+    os.makedirs(out, exist_ok=True)
+    for name, groups, orient in (("armoury", armoury(profile), True), ("pegasus", pegasus(profile), False)):
+        plate = figures.plate_layout(groups, orient=orient)  # the Pegasus prints standing, its wings flat
+        stem = os.path.join(out, f"{name}-{profile.name}")
+        write_stl([m for _, m, _ in plate], stem + ".stl")
+        write_3mf(plate, stem + ".3mf")
+        render([(m, c) for _, m, c in plate], stem + ".png", elevation=55)
+    render([(m, c) for _, m, c in scenes.knight(profile)], os.path.join(out, "knight.png"), azimuth=-60, elevation=12)
+    ride = scenes.rider(profile)
+    render([(m, c) for _, m, c in ride], os.path.join(out, "rider.png"), azimuth=-35, elevation=10)
+    write_stl([m for _, m, _ in ride], os.path.join(out, "rider.stl"))  # assembled, for printshop drop
+    print(f"wrote armoury-{profile.name}.*, pegasus-{profile.name}.*, knight.png, rider.png / .stl in {out}")
 
 
 def _figure(out: str, profile) -> None:
