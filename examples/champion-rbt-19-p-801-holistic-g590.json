@@ -1,0 +1,42 @@
+{
+  "run": "RBT-19-P-801",
+  "kind": "holistic",
+  "generation": 590,
+  "seed": 3,
+  "frame": 188,
+  "time_s": 7.52,
+  "mujoco": "3.14.0",
+  "units": 6,
+  "shapes": [
+    "box",
+    "sphere",
+    "cylinder",
+    "sphere",
+    "cylinder",
+    "sphere"
+  ],
+  "pieces_before_bridging": 1,
+  "genus": 3,
+  "mm_per_model_m": 85.84,
+  "size_mm": [
+    108.3,
+    108.3,
+    51.8
+  ],
+  "volume_cm3": 94.04,
+  "min_wall_mm": 1.6,
+  "plinth_mm": 4.0,
+  "profile": "fdm-0.4",
+  "check": {
+    "pieces": 1,
+    "genus": 3,
+    "volume_cm3": 94.04,
+    "size_mm": [
+      108.3,
+      108.3,
+      51.8
+    ],
+    "stands": true,
+    "stability_margin_mm": 50.04
+  }
+}

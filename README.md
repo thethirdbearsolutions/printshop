@@ -9,7 +9,9 @@ pip install -e .[dev]
 printshop card examples/            # tolerance card: five 2x2 plates sweeping stud/tube fit (1-5 dimples)
 printshop joints examples/          # print-in-place hinge + captured ball joint test pieces
 printshop brick 2x4 brick.stl       # a 2x4 brick (--plates 1 for a plate)
-pytest
+pip install -e .[rabbitstew]        # optional: rabbitstew (from git) + MuJoCo 3.14.0
+printshop champion RBT-19-P-801 holistic 590 examples/   # a champion posed on a plinth
+python -m pytest
 ```
 
 Each command writes an STL (all parts), a 3MF (separate named, coloured objects for multi-colour printers)
@@ -25,9 +27,25 @@ and a shaded PNG preview.
 | `checks.py` | One piece? Stands up (centre of mass inside the footprint, with margin)? Size, volume. |
 | `export.py` | Binary STL and multi-object, multi-colour 3MF. |
 | `preview.py` | Software-rendered PNG previews (no GPU or Blender needed). |
+| `sources/rabbitstew.py` | Rabbitstew champions: re-simulate a solo bout, take the pose, every unit a solid, fused onto a plinth. |
 
 Tests check that bricks are one solid at nominal size, that joint parts are separate with exactly the
 profile's clearance, and that a hinge leaf or a ball cannot be pulled out.
+
+## Rabbitstew champions
+
+`printshop champion RUN KIND GEN OUT_DIR` re-simulates the champion's solo bout exactly as rabbitstew's
+`scripts/shots.py` does (the run's config, opponent proxy on, spawn from `--seed`, default 3), takes its pose
+at `--time` (default mid-bout), and builds every box, sphere and cylinder as a solid at that pose. Units are
+grown by half the minimum wall so touching parts fuse; anything still floating is bridged by a strut. The
+figure is scaled to `--length` mm across and its feet sink into a `--plinth` mm round base. Alongside the
+STL / 3MF / PNG it writes a `.json` with the provenance (run, generation, seed, frame, MuJoCo version,
+scale) and the checks.
+
+RUN is a rabbitstew run directory or a bundled run (`printshop/data/rabbitstew/`, currently `RBT-19-P-801`).
+This is a port of rabbitstew's `scripts/print_champion.py` (on its branch `ccr-0870ebac-5zhnoi`, not yet on
+main), and with `--min-wall 1.6` it reproduces that script's print to the 0.01 mm: frame 188 at 7.52 s,
+85.84 mm per model metre, 108 x 108 x 52 mm. `examples/champion-rbt-19-p-801-holistic-g590.*` is that print.
 
 ## Calibrating a printer
 

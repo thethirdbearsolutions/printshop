@@ -11,13 +11,16 @@ dependencies = ["manifold3d>=3", "numpy>=1.24", "pillow>=10"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
-rabbitstew = ["mujoco==3.14.0"]
+rabbitstew = ["mujoco==3.14.0", "rabbitstew @ git+https://github.com/thethirdbearsolutions/rabbitstew"]
 
 [project.scripts]
 printshop = "printshop.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["printshop*"]
+
+[tool.setuptools.package-data]
+printshop = ["data/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

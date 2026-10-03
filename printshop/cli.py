@@ -3,6 +3,7 @@
     printshop card OUT_DIR [--profile fdm-0.4]          tolerance card: 2x2 plates sweeping stud/tube fit
     printshop brick WxL OUT.stl [--plates 3]             one brick (3 plates) or plate (1)
     printshop joints OUT_DIR [--profile fdm-0.4]         print-in-place hinge and ball joint test pieces
+    printshop champion RUN KIND GEN OUT_DIR [--seed 3]   a rabbitstew champion posed on a plinth (needs the extra)
 """
 from __future__ import annotations
 
@@ -33,6 +34,13 @@ def main(argv=None) -> None:
     b = sub.add_parser("brick"); b.add_argument("size"); b.add_argument("out"); b.add_argument("--plates", type=int, default=3)
     b.add_argument("--profile", default="fdm-0.4")
     j = sub.add_parser("joints"); j.add_argument("out"); j.add_argument("--profile", default="fdm-0.4")
+    ch = sub.add_parser("champion")
+    for arg in ("run", "kind"):
+        ch.add_argument(arg)
+    ch.add_argument("gen", type=int); ch.add_argument("out"); ch.add_argument("--profile", default="fdm-0.4")
+    ch.add_argument("--seed", type=int, default=3); ch.add_argument("--time", type=float, default=None)
+    ch.add_argument("--length", type=float, default=90.0); ch.add_argument("--min-wall", type=float, default=None)
+    ch.add_argument("--plinth", type=float, default=4.0)
     a = ap.parse_args(argv)
     profile = PROFILES[a.profile]
 
@@ -50,6 +58,22 @@ def main(argv=None) -> None:
         s, ball = ball_joint(profile=profile)
         _emit([("hinge-a", h_a), ("hinge-b", h_b), ("socket", s.translate([30, 0, 0])), ("ball", ball.translate([30, 0, 0]))],
               os.path.join(a.out, f"joint-gauge-{profile.name}"))
+    elif a.cmd == "champion":
+        from .sources import rabbitstew
+
+        os.makedirs(a.out, exist_ok=True)
+        champ = rabbitstew.load(a.run, a.kind, a.gen)
+        body, info = rabbitstew.figurine(champ, a.seed, a.time, a.length, profile, a.min_wall, a.plinth)
+        stem = os.path.join(a.out, f"champion-{champ.name}")
+        _emit([(champ.name, body)], stem)
+        _provenance(stem, info, body)
+
+
+def _provenance(stem: str, info: dict, body) -> None:
+    info = dict(info, check=check(body).__dict__)
+    with open(stem + ".json", "w") as f:
+        json.dump(info, f, indent=2, default=float)
+    print(json.dumps(info, default=float))
 
 
 if __name__ == "__main__":
