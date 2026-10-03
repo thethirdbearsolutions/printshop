@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "printshop"
+version = "0.1.0"
+description = "Code to printable parts: brick-system pieces, print-in-place joints, figures from our games and simulations"
+requires-python = ">=3.10"
+dependencies = ["manifold3d>=3", "numpy>=1.24", "pillow>=10"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+rabbitstew = ["mujoco==3.14.0"]
+
+[project.scripts]
+printshop = "printshop.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["printshop*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
