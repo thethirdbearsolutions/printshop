@@ -16,6 +16,8 @@ import argparse
 import json
 import os
 
+import numpy as np
+
 from .bricks import brick, tolerance_card
 from .checks import check
 from .export import write_3mf, write_stl
@@ -154,6 +156,14 @@ def _stand(a, profile) -> None:
     best = r.pop("best_solid")
     stem = os.path.join(a.out, f"stand-{champ.name}")
     render([(best, PALETTE[0])], stem + ".png", elevation=12)
+    from .stand import cradle
+
+    holder, placed = cradle(list(fig.solids.values()))  # holds it upright as built, joints straight
+    write_stl(holder, stem + "-cradle.stl")
+    render([(holder, "#8a8f9a")] + [(m, PALETTE[i % len(PALETTE)]) for i, m in enumerate(placed)], stem + "-cradle.png",
+           elevation=25)
+    r["cradle"] = {"size_mm": [round(float(x), 1) for x in np.ptp(np.array(holder.bounding_box()).reshape(2, 3), 0)],
+                   "volume_cm3": round(holder.volume() / 1000, 1)}
     with open(stem + ".json", "w") as f:
         json.dump(r, f, indent=2, default=float)
     print(json.dumps({k: v for k, v in r.items() if k != "settle_deg"}, default=float))

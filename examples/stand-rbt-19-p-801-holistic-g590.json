@@ -93,5 +93,13 @@
     "tip_angle_deg": 5.1,
     "mass_g": 132.2,
     "mujoco": "3.14.0"
+  },
+  "cradle": {
+    "size_mm": [
+      133.7,
+      66.6,
+      29.7
+    ],
+    "volume_cm3": 131.9
   }
 }

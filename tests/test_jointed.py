@@ -79,3 +79,21 @@ def test_straight_champion_falls_over_but_one_pose_nearly_stands(built):
     assert not straight["upright"] and straight["final_tilt_deg"] > 45  # rabbitstew's rest pose is not a stance
     r = stand_search(fig, trials=4)
     assert r["poses_tried"] == 5 * 3 * 5 and r["best_settles_deg"] < 10
+
+
+def test_cradle_holds_the_champion_upright_and_lets_it_lift_out(built):
+    from printshop.articulate import union
+    from printshop.mechanisms import rotation
+    from printshop.stability import mass_properties
+    from printshop.stand import cradle
+
+    fig, _ = built
+    holder, placed = cradle(list(fig.solids.values()), gap=0.3)
+    figure = union(placed)
+    assert len(holder.decompose()) == 1 and (figure ^ holder).volume() < 1e-6
+    assert figure.min_gap(holder, 2.0) >= 0.3 - 0.01
+    assert (figure.translate([0, 0, 10]) ^ holder).volume() < 1e-6  # it lifts straight out
+    _, com, _ = mass_properties(figure)
+    for d in np.radians(range(0, 360, 45)):  # but cannot lean 4 degrees any way
+        lean = rotation([np.cos(d), np.sin(d), 0], np.radians(4), com * 1000)
+        assert (figure.transform(lean[:3]) ^ holder).volume() > 1.0

@@ -39,6 +39,7 @@ and a shaded PNG preview.
 | `sources/rabbitstew_jointed.py` | Rabbitstew champions with every MuJoCo joint as a printed joint. |
 | `figures.py` | A brick-system figure: head on a neck stud, clip hands for the 3.2 mm bar, hip and shoulder pins. |
 | `accessories.py` | Things to hold, built on the bar: a plain bar, a star wand, a hand mirror, a horseshoe magnet. |
+| `stand.py` | A cradle that holds a figure in a pose it cannot keep by itself. |
 | `stability.py` | Does a posed figure stay up? MuJoCo drop tests, settling, the static tip angle, pose search. |
 | `colour.py` | Merge a model's colours down to the printer's filament slots (Ward linkage in CIELAB). |
 | `sources/burritos.py` | Chaotic Attack burritos: parts to solids, fused, on a stud-grid base, split by colour. |
@@ -194,7 +195,13 @@ where `build_model()` lifts the body to the floor, not a stance), it goes 71° o
 on the big sphere, the trunk's edge and the small sphere. No pose stays within 5°. The best pose, with the big
 sphere's ball joint tipped to its cone, settles 7.9° over, standing on the big sphere and a corner of the
 trunk. Its tip angle there is 5.1°, and 2 of 8 drops from 20 mm at a 5° lean stay up
-(`examples/stand-rbt-19-p-801-holistic-g590.*`). So as a toy it lies on its side; to stand, it needs a base.
+(`examples/stand-rbt-19-p-801-holistic-g590.*`). So it prints two ways: as a toy it lies on its side, and to
+stand it gets a cradle.
+
+`printshop stand` also writes that cradle (`stand-<name>-cradle.stl`, `stand.py`). It holds the champion upright
+in its simulated stance, joints straight. The cradle is the figure's outline plus 3 mm, built up to 35% of its
+height, less each piece swept straight up and grown by a 0.3 mm resting gap. The figure drops in and lifts
+straight out, but a 4° lean any way runs into the walls. For RBT-19 g590 it is 134 x 67 x 30 mm.
 
 ## Calibrating a printer
 
