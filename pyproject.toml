@@ -12,6 +12,7 @@ dependencies = ["manifold3d>=3", "numpy>=1.24", "pillow>=10"]
 [project.optional-dependencies]
 dev = ["pytest>=7"]
 rabbitstew = ["mujoco==3.14.0", "rabbitstew @ git+https://github.com/thethirdbearsolutions/rabbitstew"]
+sim = ["mujoco==3.14.0"]
 
 [project.scripts]
 printshop = "printshop.cli:main"

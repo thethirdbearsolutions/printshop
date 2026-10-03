@@ -7,6 +7,8 @@
     printshop jointed RUN KIND GEN OUT_DIR [--mm M]      the champion with printed joints, laid out to print in place
     printshop burrito KIND OUT_DIR [--slots 4]           a Chaotic Attack burrito on a stud-grid base, in colour
     printshop figure OUT_DIR [--profile fdm-0.4]         a brick-system figure and its bar accessories
+    printshop drop FILE.stl [--trials 8 --height 20]     does it stay up? a MuJoCo drop test (needs mujoco)
+    printshop stand RUN KIND GEN OUT_DIR                 which pose of a jointed champion stands up?
 """
 from __future__ import annotations
 
@@ -50,6 +52,15 @@ def main(argv=None) -> None:
     jt.add_argument("gen", type=int); jt.add_argument("out"); jt.add_argument("--profile", default="fdm-0.4")
     jt.add_argument("--mm", type=float, default=None, help="mm per model metre (default: smallest that fits)")
     fg = sub.add_parser("figure"); fg.add_argument("out"); fg.add_argument("--profile", default="fdm-0.4")
+    dr = sub.add_parser("drop"); dr.add_argument("stl"); dr.add_argument("--trials", type=int, default=8)
+    dr.add_argument("--height", type=float, default=20.0, help="mm above the floor")
+    dr.add_argument("--tilt", type=float, default=5.0, help="degrees of lean, in a random direction each trial")
+    dr.add_argument("--shove", type=float, default=0.0, help="m/s sideways, the way it leans")
+    dr.add_argument("--settle", action="store_true", help="first let it fall into the pose it rests in")
+    st = sub.add_parser("stand")
+    for arg in ("run", "kind"):
+        st.add_argument(arg)
+    st.add_argument("gen", type=int); st.add_argument("out"); st.add_argument("--profile", default="fdm-0.4")
     bu = sub.add_parser("burrito")
     bu.add_argument("kind", help="a bundled kind (madison, yuri, sebastian, firework) or an exporter .json.gz")
     bu.add_argument("out"); bu.add_argument("--profile", default="fdm-0.4")
@@ -57,7 +68,7 @@ def main(argv=None) -> None:
     bu.add_argument("--mm", type=float, default=22.0, help="mm per three.js unit")
     bu.add_argument("--no-hero", action="store_true", help="without the earned costume")
     a = ap.parse_args(argv)
-    profile = PROFILES[a.profile]
+    profile = PROFILES[getattr(a, "profile", "fdm-0.4")]
 
     if a.cmd == "card":
         os.makedirs(a.out, exist_ok=True)
@@ -84,6 +95,19 @@ def main(argv=None) -> None:
         _provenance(stem, info, body)
     elif a.cmd == "jointed":
         _jointed(a, profile)
+    elif a.cmd == "drop":
+        from .export import read_stl
+        from .stability import drop_test, settle
+
+        m = read_stl(a.stl)
+        if a.settle:
+            m, _ = settle(m)
+        r = drop_test(m, a.trials, a.height, a.tilt, a.shove)
+        for run in r["runs"]:
+            run.pop("pose")
+        print(json.dumps(r, indent=2, default=float))
+    elif a.cmd == "stand":
+        _stand(a, profile)
     elif a.cmd == "figure":
         _figure(a.out, profile)
     elif a.cmd == "burrito":
@@ -118,6 +142,23 @@ def _jointed(a, profile) -> None:
     print(f"wrote {stem}.json / -posed.png")
 
 
+def _stand(a, profile) -> None:
+    from .sources import rabbitstew
+    from .sources.rabbitstew_jointed import jointed
+    from .stability import stand_search
+
+    os.makedirs(a.out, exist_ok=True)
+    champ = rabbitstew.load(a.run, a.kind, a.gen)
+    fig, _ = jointed(champ, profile)
+    r = stand_search(fig)
+    best = r.pop("best_solid")
+    stem = os.path.join(a.out, f"stand-{champ.name}")
+    render([(best, PALETTE[0])], stem + ".png", elevation=12)
+    with open(stem + ".json", "w") as f:
+        json.dump(r, f, indent=2, default=float)
+    print(json.dumps({k: v for k, v in r.items() if k != "settle_deg"}, default=float))
+
+
 def _figure(out: str, profile) -> None:
     from . import figures
     from .accessories import accessories, wand
@@ -143,7 +184,8 @@ def _figure(out: str, profile) -> None:
     scene = [(figures.rotate_about_x(m, -90, L.shoulder) if n == "arm-right" else m, colours[n]) for n, m in parts.items()]
     scene += [(figures.rotate_about_x(m, -90, L.shoulder), c) for m, c in held]
     render(scene, os.path.join(out, "figure-assembled.png"), azimuth=-60, elevation=15)
-    print(f"wrote {stem}.stl / .3mf / .png, {astem}.stl / .3mf / .png, figure-assembled.png")
+    write_stl([m for m, _ in scene], os.path.join(out, "figure-assembled.stl"))  # posed, for printshop drop
+    print(f"wrote {stem}.stl / .3mf / .png, {astem}.stl / .3mf / .png, figure-assembled.png / .stl")
 
 
 def _provenance(stem: str, info: dict, body) -> None:

@@ -14,6 +14,8 @@ printshop champion RBT-19-P-801 holistic 590 examples/   # a champion posed on a
 printshop jointed RBT-19-P-801 holistic 590 examples/    # the champion with printed joints, print-in-place
 printshop burrito madison examples/                      # a Chaotic Attack burrito on a stud-grid base, in colour
 printshop figure examples/                               # a brick-system figure and accessories for its hands
+printshop drop examples/burrito-madison.stl              # does it stay up? MuJoCo drop test (pip install -e .[sim])
+printshop stand RBT-19-P-801 holistic 590 examples/      # which pose of the jointed champion stands up?
 python -m pytest
 ```
 
@@ -37,6 +39,7 @@ and a shaded PNG preview.
 | `sources/rabbitstew_jointed.py` | Rabbitstew champions with every MuJoCo joint as a printed joint. |
 | `figures.py` | A brick-system figure: head on a neck stud, clip hands for the 3.2 mm bar, hip and shoulder pins. |
 | `accessories.py` | Things to hold, built on the bar: a plain bar, a star wand, a hand mirror, a horseshoe magnet. |
+| `stability.py` | Does a posed figure stay up? MuJoCo drop tests, settling, the static tip angle, pose search. |
 | `colour.py` | Merge a model's colours down to the printer's filament slots (Ward linkage in CIELAB). |
 | `sources/burritos.py` | Chaotic Attack burritos: parts to solids, fused, on a stud-grid base, split by colour. |
 | `tools/burrito-export/` | Node script that builds burritos headlessly (no renderer) and dumps their parts. |
@@ -159,6 +162,40 @@ drop out of a hand, that the legs swing ±90° on the hips and the arms all the 
 anything, that the figure stands on a 2x2 plate, and that a retuned profile (a 3.0 mm bar, say) changes
 every fit.
 
+## Does it stay up?
+
+`printshop drop FILE.stl` drops a figure onto a floor in MuJoCo (3.14.0, the `sim` extra) and says how often
+it stays up. A posed figure is one rigid body (printed joints are stiff enough to hold a pose). Its mass,
+centre of mass and inertia come from the mesh (solid PLA). It collides as its convex hull, which is exact on a
+flat floor, since only the hull can touch it. Each trial drops it from `--height` mm (default 20) leaning `--tilt`
+degrees (default 5) in a random direction, optionally with a `--shove`, and runs until it has been still for a
+quarter of a second. It stayed up if it ends back within 5° of how it stood. Alongside, the static tip angle is
+how far it can lean before its centre of mass passes the edge of its footprint. A pole that tips at 9.5°
+rights itself in the simulation from 6.5° and falls from 12.5°.
+
+`--settle` first lets the figure fall into whatever pose it rests in, then tests that.
+
+| Figure (examples/) | Stayed up, 8 drops from 20 mm at a 5° lean | Tip angle | Mass |
+|---|---|---|---|
+| `burrito-madison` | 8 | 35.6° | 30.5 g |
+| `burrito-yuri` | 8 | 32.9° | 28.0 g |
+| `burrito-sebastian` | 8 | 33.6° | 27.4 g |
+| `burrito-firework` | 8 | 31.9° | 12.7 g |
+| `champion-rbt-19-p-801-holistic-g590` (on its plinth) | 8 | 72.7° | 116.6 g |
+| `figure-assembled` (right arm up, holding the wand) | 5 | 8.7° | 4.7 g |
+| brick figure, arms down | 6 of 6 from 10 mm at 3° | 12.0° | 4.4 g |
+
+The brick figure with its wand raised is marginal standing free; on a plate, its feet are on studs.
+
+**The jointed champion does not stay up as built.** `printshop stand` sets RBT-19 P-801 g590's print down
+in its build orientation in 75 poses: every combination of the hinge at either stop or straight, and each ball
+straight or tipped to its cone four ways. With every joint straight (rabbitstew's rest pose, which is only
+where `build_model()` lifts the body to the floor, not a stance), it goes 71° over onto its side and rests there
+on the big sphere, the trunk's edge and the small sphere. No pose stays within 5°. The best pose, with the big
+sphere's ball joint tipped to its cone, settles 7.9° over, standing on the big sphere and a corner of the
+trunk. Its tip angle there is 5.1°, and 2 of 8 drops from 20 mm at a 5° lean stay up
+(`examples/stand-rbt-19-p-801-holistic-g590.*`). So as a toy it lies on its side; to stand, it needs a base.
+
 ## Calibrating a printer
 
 1. Print `printshop card` and `printshop joints` with the starting profile.
@@ -176,7 +213,7 @@ every fit.
 2. ~~Jointed rabbitstew champions~~ (`printshop jointed`).
 3. ~~Burritos~~ (`printshop burrito`). The other seventeen kinds export too; only four are bundled.
 4. ~~Brick-system figures and accessories~~ (`printshop figure`).
-5. **Stability in MuJoCo** for posed figures: drop the print onto a floor and see whether it stays up.
+5. ~~Stability in MuJoCo~~ (`printshop drop`, `printshop stand`).
 6. **Calibrate** on the first printer (above), then print the jointed champion.
 
 Brick compatibility is with the stud system only. Do not name or sell anything as LEGO.

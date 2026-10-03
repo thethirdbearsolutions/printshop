@@ -103,3 +103,25 @@ def posed(fig: Figure, motions: dict) -> dict:
                 T = T @ motions[j.name]
         out[b] = s.transform(T[:3])
     return out
+
+
+def pose_options(fig: Figure, joint) -> list:
+    """A few poses to try a joint in: a hinge at both stops and straight; a ball straight and tipped to
+    its cone four ways round; a slide at both ends and the middle."""
+    m = fig.mechs[joint.name]
+    if joint.kind == "hinge":
+        lo, hi = joint.limits or (-np.pi / 2, np.pi / 2)
+        return [rotation(joint.axis, a, joint.anchor) for a in (0.0, lo, hi)]
+    if joint.kind == "slide":
+        out = []
+        for s in (0.0, *m.info["travel_mm"]):
+            T = np.eye(4)
+            T[:3, 3] = s * joint.axis
+            out.append(T)
+        return out
+    z = joint.out
+    x = np.cross(z, [1, 0, 0] if abs(z[0]) < 0.9 else [0, 1, 0])
+    x /= np.linalg.norm(x)
+    y = np.cross(z, x)
+    cone = np.radians(m.info["cone_deg"])
+    return [np.eye(4)] + [rotation(np.cos(p) * x + np.sin(p) * y, cone, joint.anchor) for p in np.radians([0, 90, 180, 270])]

@@ -1,0 +1,68 @@
+{
+  "stayed_up": 8,
+  "trials": 8,
+  "height_mm": 20.0,
+  "tilt_deg": 5.0,
+  "shove_m_s": 0.0,
+  "tip_angle_deg": 32.9,
+  "mass_g": 28.0,
+  "mujoco": "3.14.0",
+  "runs": [
+    {
+      "final_tilt_deg": 0.0,
+      "max_tilt_deg": 5.0,
+      "upright": true,
+      "resting": true,
+      "seconds": 0.45
+    },
+    {
+      "final_tilt_deg": 0.0,
+      "max_tilt_deg": 8.59,
+      "upright": true,
+      "resting": true,
+      "seconds": 0.53
+    },
+    {
+      "final_tilt_deg": 0.0,
+      "max_tilt_deg": 8.33,
+      "upright": true,
+      "resting": true,
+      "seconds": 0.53
+    },
+    {
+      "final_tilt_deg": 0.0,
+      "max_tilt_deg": 9.11,
+      "upright": true,
+      "resting": true,
+      "seconds": 0.54
+    },
+    {
+      "final_tilt_deg": 0.0,
+      "max_tilt_deg": 8.39,
+      "upright": true,
+      "resting": true,
+      "seconds": 0.53
+    },
+    {
+      "final_tilt_deg": 0.0,
+      "max_tilt_deg": 6.44,
+      "upright": true,
+      "resting": true,
+      "seconds": 0.51
+    },
+    {
+      "final_tilt_deg": 0.0,
+      "max_tilt_deg": 5.0,
+      "upright": true,
+      "resting": true,
+      "seconds": 0.44
+    },
+    {
+      "final_tilt_deg": 0.0,
+      "max_tilt_deg": 9.1,
+      "upright": true,
+      "resting": true,
+      "seconds": 0.54
+    }
+  ]
+}

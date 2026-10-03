@@ -67,3 +67,15 @@ def test_prints_flat_on_a_real_foot_with_less_support_than_standing(built):
     flat = replace(fig, solids=laid)
     assert min(gaps(flat).values()) >= FDM_04.joint_clearance - 0.005
     assert all(captured(flat, j) for j in fig.joints)
+
+
+def test_straight_champion_falls_over_but_one_pose_nearly_stands(built):
+    """MuJoCo 3.14.0, pinned, so these are reproducible findings, not tolerances."""
+    from printshop.articulate import union
+    from printshop.stability import drop, stand_search
+
+    fig, _ = built
+    straight = drop(union(list(fig.solids.values())), height=0.5)
+    assert not straight["upright"] and straight["final_tilt_deg"] > 45  # rabbitstew's rest pose is not a stance
+    r = stand_search(fig, trials=4)
+    assert r["poses_tried"] == 5 * 3 * 5 and r["best_settles_deg"] < 10

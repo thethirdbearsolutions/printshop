@@ -33,6 +33,18 @@ def write_stl(parts, path: str, header: str = "printshop") -> int:
     return len(tri)
 
 
+def read_stl(path: str) -> Manifold:
+    """A binary STL as a solid (vertices welded, so a watertight STL comes back watertight)."""
+    with open(path, "rb") as f:
+        data = f.read()
+    n = struct.unpack("<I", data[80:84])[0]
+    rec = np.frombuffer(data[84:84 + 50 * n], dtype=[("n", "<f4", 3), ("v", "<f4", (3, 3)), ("a", "<u2")])
+    verts, inv = np.unique(rec["v"].reshape(-1, 3), axis=0, return_inverse=True)
+    from manifold3d import Mesh
+
+    return Manifold(Mesh(vert_properties=verts.astype(np.float32), tri_verts=inv.reshape(-1, 3).astype(np.uint32)))
+
+
 def write_3mf(objects, path: str, assembly: str | None = None) -> None:
     """objects: list of (name, Manifold, "#RRGGBB" or None). Each becomes its own object, so a
     multi-colour printer can give each its own filament and a slicer can arrange them. With
