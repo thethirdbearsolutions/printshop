@@ -6,6 +6,7 @@
     printshop champion RUN KIND GEN OUT_DIR [--seed 3]   a rabbitstew champion posed on a plinth (needs the extra)
     printshop jointed RUN KIND GEN OUT_DIR [--mm M]      the champion with printed joints, laid out to print in place
     printshop burrito KIND OUT_DIR [--slots 4]           a Chaotic Attack burrito on a stud-grid base, in colour
+    printshop figure OUT_DIR [--profile fdm-0.4]         a brick-system figure and its bar accessories
 """
 from __future__ import annotations
 
@@ -48,6 +49,7 @@ def main(argv=None) -> None:
         jt.add_argument(arg)
     jt.add_argument("gen", type=int); jt.add_argument("out"); jt.add_argument("--profile", default="fdm-0.4")
     jt.add_argument("--mm", type=float, default=None, help="mm per model metre (default: smallest that fits)")
+    fg = sub.add_parser("figure"); fg.add_argument("out"); fg.add_argument("--profile", default="fdm-0.4")
     bu = sub.add_parser("burrito")
     bu.add_argument("kind", help="a bundled kind (madison, yuri, sebastian, firework) or an exporter .json.gz")
     bu.add_argument("out"); bu.add_argument("--profile", default="fdm-0.4")
@@ -82,6 +84,8 @@ def main(argv=None) -> None:
         _provenance(stem, info, body)
     elif a.cmd == "jointed":
         _jointed(a, profile)
+    elif a.cmd == "figure":
+        _figure(a.out, profile)
     elif a.cmd == "burrito":
         from .sources import burritos
 
@@ -112,6 +116,34 @@ def _jointed(a, profile) -> None:
     with open(stem + ".json", "w") as f:
         json.dump(dict(info, checks=report(fig), layout=layout), f, indent=2, default=str)
     print(f"wrote {stem}.json / -posed.png")
+
+
+def _figure(out: str, profile) -> None:
+    from . import figures
+    from .accessories import accessories, wand
+
+    os.makedirs(out, exist_ok=True)
+    parts = figures.figure(profile)
+    colours = {"head": "#f2d9a8", "torso": "#2f6fff", "arm-left": "#2f6fff", "arm-right": "#2f6fff",
+               "hips": "#3a3a48", "leg-left": "#3a3a48", "leg-right": "#3a3a48"}
+    plate = figures.plate_layout({n: [(n, m, colours[n])] for n, m in parts.items()})
+    stem = os.path.join(out, f"figure-{profile.name}")
+    write_stl([m for _, m, _ in plate], stem + ".stl")
+    write_3mf(plate, stem + ".3mf")
+    render([(m, c) for _, m, c in plate], stem + ".png", elevation=55)
+    acc = figures.plate_layout(accessories(profile))
+    astem = os.path.join(out, f"accessories-{profile.name}")
+    write_stl([m for _, m, _ in acc], astem + ".stl")
+    write_3mf(acc, astem + ".3mf")
+    render([(m, c) for _, m, c in acc], astem + ".png", elevation=55)
+    # Assembled, right arm raised, holding the wand upright in its hand.
+    L = figures.Layout(profile)
+    held = [(m.rotate([90, 0, 0]).translate(figures.hand_centre(profile, -1) + [0, 9.5, 0]), c)
+            for _, m, c in wand(profile)]
+    scene = [(figures.rotate_about_x(m, -90, L.shoulder) if n == "arm-right" else m, colours[n]) for n, m in parts.items()]
+    scene += [(figures.rotate_about_x(m, -90, L.shoulder), c) for m, c in held]
+    render(scene, os.path.join(out, "figure-assembled.png"), azimuth=-60, elevation=15)
+    print(f"wrote {stem}.stl / .3mf / .png, {astem}.stl / .3mf / .png, figure-assembled.png")
 
 
 def _provenance(stem: str, info: dict, body) -> None:

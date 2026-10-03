@@ -13,6 +13,7 @@ pip install -e .[rabbitstew]        # optional: rabbitstew (from git) + MuJoCo 3
 printshop champion RBT-19-P-801 holistic 590 examples/   # a champion posed on a plinth
 printshop jointed RBT-19-P-801 holistic 590 examples/    # the champion with printed joints, print-in-place
 printshop burrito madison examples/                      # a Chaotic Attack burrito on a stud-grid base, in colour
+printshop figure examples/                               # a brick-system figure and accessories for its hands
 python -m pytest
 ```
 
@@ -34,6 +35,8 @@ and a shaded PNG preview.
 | `motion.py` | Checks for articulated figures: one piece each, gaps, capture, sweeps; posing. |
 | `orient.py` | Which way up to print: least support for the most bed contact; flat feet. |
 | `sources/rabbitstew_jointed.py` | Rabbitstew champions with every MuJoCo joint as a printed joint. |
+| `figures.py` | A brick-system figure: head on a neck stud, clip hands for the 3.2 mm bar, hip and shoulder pins. |
+| `accessories.py` | Things to hold, built on the bar: a plain bar, a star wand, a hand mirror, a horseshoe magnet. |
 | `colour.py` | Merge a model's colours down to the printer's filament slots (Ward linkage in CIELAB). |
 | `sources/burritos.py` | Chaotic Attack burritos: parts to solids, fused, on a stud-grid base, split by colour. |
 | `tools/burrito-export/` | Node script that builds burritos headlessly (no renderer) and dumps their parts. |
@@ -135,21 +138,44 @@ are bundled, in their hero costumes: Madison (the default burrito), Yuri Dessert
 All four are one piece and stand (the centre of mass is 12-16 mm inside the base's edge). The capes clip
 through the wraps, as they do in the game.
 
+## Figures and accessories
+
+`printshop figure OUT_DIR` writes a seven-part figure laid out to print (`figure-<profile>.*`), its
+accessories (`accessories-<profile>.*`) and `figure-assembled.png`. The shapes are printshop's own (a domed
+head, a rounded barrel of a torso); the interfaces are the stud system's, and every fit is a profile number:
+
+| Interface | Geometry | Profile |
+|---|---|---|
+| hand grips the bar | C clip round the bar, mouth narrower than the bar so it snaps on and holds | `pin_diameter` (3.2), `clip_fit` (-0.10: the bore prints that much under the bar), `clip_opening` (0.75 of the bar) |
+| accessory on the bar | the bar is a peg, chamfered at the ends | `pin_diameter`, less `xy_compensation` |
+| head on a stud | socket under the head over the torso's neck stud; a stud on the head for a hat | `stud_diameter`, `stud_height`, `socket_delta` |
+| waist | the torso's socket over a stud on the hips, so it turns | the same |
+| hips | a keel between the legs carries one pin; each leg's inner face has a hole on it | `pin_diameter`, `pin_fit` (0.15: stiff but turns) |
+| shoulders | a pin on each arm into a hole in the torso's side | the same |
+| standing | a stud socket in each foot, one `pitch` apart, so the figure presses onto a plate | `pitch`, `stud_diameter`, `socket_delta` |
+
+Tests check the printed sizes (holes come out `xy_compensation` smaller, pegs bigger), that the bar cannot
+drop out of a hand, that the legs swing ±90° on the hips and the arms all the way round without touching
+anything, that the figure stands on a 2x2 plate, and that a retuned profile (a 3.0 mm bar, say) changes
+every fit.
+
 ## Calibrating a printer
 
 1. Print `printshop card` and `printshop joints` with the starting profile.
 2. Press each card plate onto a real plate, and a real 2x2 onto it. Count the dimples on the one that clicks
    and holds without splitting; that sets `stud_delta` / `tube_delta` for the profile.
 3. Work the joint pieces free. If they are fused, raise `joint_clearance`; if sloppy, lower it.
-4. Save the result as a named profile in `profiles.py`. Everything else picks it up.
+4. Print `printshop figure`. If the bar will not go into a hand, make `clip_fit` less negative (or raise
+   `clip_opening`); if it falls out, more negative. If the legs or arms will not turn, raise `pin_fit`; if
+   they flop, lower it. If the head will not stay on, lower `socket_delta`.
+5. Save the result as a named profile in `profiles.py`. Everything else picks it up.
 
 ## Roadmap
 
 1. ~~Rabbitstew champions as figurines~~ (`printshop champion`).
 2. ~~Jointed rabbitstew champions~~ (`printshop jointed`).
 3. ~~Burritos~~ (`printshop burrito`). The other seventeen kinds export too; only four are bundled.
-4. **Brick-system figures and accessories.** Hands that grip the 3.2 mm bar, accessories built on that bar,
-   heads on studs, hip pins.
+4. ~~Brick-system figures and accessories~~ (`printshop figure`).
 5. **Stability in MuJoCo** for posed figures: drop the print onto a floor and see whether it stays up.
 6. **Calibrate** on the first printer (above), then print the jointed champion.
 
