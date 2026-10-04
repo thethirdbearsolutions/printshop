@@ -120,6 +120,8 @@ def page(path: str, static: bool = False, profile: str = "fdm-0.4") -> str:
             "profiles": list(PROFILES), "profile": profile}
     if static:
         boot["model"] = payload(path, profile)
+    name = os.path.splitext(os.path.basename(path))[0].replace("-", " ").replace("_", " ")
+    html = html.replace("<title>printshop studio</title>", f"<title>{name.title()} design</title>")
     return html.replace("/*BOOT*/null", json.dumps(boot))
 
 
