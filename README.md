@@ -209,6 +209,10 @@ volumes, genus, checks and colour groups. It runs about 3-6x slower (the sign te
 burrito in 4 s). `tools/pyodide/check_page.cjs` drives a built page in headless Chromium: Python boots, a slider
 and a code edit re-run the design, and an error is shown rather than thrown.
 
+`printshop site SITE/ examples/designs/*.py` builds a page per design and an index linking them, and
+`.github/workflows/pages.yml` publishes that to GitHub Pages whenever a design or printshop changes. One-time
+setup: Settings > Pages > Source: GitHub Actions.
+
 ## Knight and Pegasus
 
 `printshop knight OUT_DIR` writes the armoury laid out to print (`armoury-<profile>.*`), the Pegasus

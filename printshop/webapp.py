@@ -77,3 +77,44 @@ def build(design: str, out: str, profile: str = "fdm-0.4") -> list:
     with open(os.path.join(out, "index.html"), "w") as f:
         f.write(html)
     return ["index.html"] + files
+
+
+INDEX = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>printshop designs</title>
+<style>
+  :root {{ --bg: #f4f3ef; --card: #fff; --ink: #1d1d1f; --muted: #6b6b70; --line: #dddad2; --accent: #2f6fff; }}
+  @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) {{
+    --bg: #17181b; --card: #222429; --ink: #ececef; --muted: #9a9aa3; --line: #34363c; --accent: #6f9bff; }} }}
+  :root[data-theme="dark"] {{ --bg: #17181b; --card: #222429; --ink: #ececef; --muted: #9a9aa3; --line: #34363c;
+    --accent: #6f9bff; }}
+  body {{ margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }}
+  main {{ max-width: 760px; margin: 0 auto; padding: 32px 16px; }}
+  h1 {{ font-size: 22px; margin: 0 0 4px; }} p {{ color: var(--muted); margin: 0 0 24px; }}
+  a.card {{ display: block; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 12px; color: inherit; text-decoration: none; }}
+  a.card:hover {{ border-color: var(--accent); }} .name {{ font-weight: 600; }} .doc {{ color: var(--muted); font-size: 13px; }}
+</style></head>
+<body><main><h1>printshop designs</h1>
+<p>Each runs printshop itself in your browser: turn it, move its sliders, edit its code, download the STL.</p>
+{cards}
+</main></body></html>
+"""
+
+
+def site(designs: list, out: str, profile: str = "fdm-0.4") -> list:
+    """A page per design (out/<name>/) and an index linking them: what GitHub Pages serves."""
+    import ast
+    import html
+
+    cards, written = [], ["index.html"]
+    for design in sorted(designs):
+        name = os.path.splitext(os.path.basename(design))[0]
+        written += [f"{name}/{f}" for f in build(design, os.path.join(out, name), profile)]
+        with open(design) as f:
+            doc = (ast.get_docstring(ast.parse(f.read())) or "").split("\n")[0]
+        cards.append(f'<a class="card" href="{name}/"><div class="name">{html.escape(name)}</div>'
+                     f'<div class="doc">{html.escape(doc)}</div></a>')
+    with open(os.path.join(out, "index.html"), "w") as f:
+        f.write(INDEX.format(cards="\n".join(cards)))
+    return written

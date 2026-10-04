@@ -13,6 +13,7 @@
     printshop studio NAME.py [--port 8008]               live 3D view of a design file, sliders and checks
     printshop view NAME.py OUT.html                      the same view as one standalone page
     printshop web NAME.py OUT_DIR                        a page that runs printshop itself, in the browser
+    printshop site OUT_DIR DESIGN.py...                  a page per design and an index (for GitHub Pages)
     printshop stand RUN KIND GEN OUT_DIR                 which pose of a jointed champion stands up?
 """
 from __future__ import annotations
@@ -63,6 +64,7 @@ def main(argv=None) -> None:
     sd = sub.add_parser("studio"); sd.add_argument("file"); sd.add_argument("--port", type=int, default=8008)
     vw = sub.add_parser("view"); vw.add_argument("file"); vw.add_argument("out"); vw.add_argument("--profile", default="fdm-0.4")
     wb = sub.add_parser("web"); wb.add_argument("file"); wb.add_argument("out"); wb.add_argument("--profile", default="fdm-0.4")
+    si = sub.add_parser("site"); si.add_argument("out"); si.add_argument("designs", nargs="+")
     kn = sub.add_parser("knight"); kn.add_argument("out"); kn.add_argument("--profile", default="fdm-0.4")
     dr = sub.add_parser("drop"); dr.add_argument("stl"); dr.add_argument("--trials", type=int, default=8)
     dr.add_argument("--height", type=float, default=20.0, help="mm above the floor")
@@ -136,6 +138,10 @@ def main(argv=None) -> None:
         from .webapp import build
 
         print("\n".join(os.path.join(a.out, f) for f in build(a.file, a.out, a.profile)))
+    elif a.cmd == "site":
+        from .webapp import site
+
+        print(f"{len(site(a.designs, a.out))} files in {a.out}")
     elif a.cmd == "knight":
         _knight(a.out, profile)
     elif a.cmd == "figure":

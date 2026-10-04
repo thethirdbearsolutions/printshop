@@ -40,3 +40,15 @@ def test_build_writes_a_page_that_boots_python(tmp_path, monkeypatch):
     assert boot["engine"] == "pyodide" and boot["pyodide"].startswith("https://cdn.jsdelivr.net/npm/pyodide@")
     assert "def design(p" in boot["source"] and boot["model"]["checks"]["pieces"] == 1  # a snapshot until it boots
     assert all((tmp_path / "site" / f).exists() for f in files)
+
+
+@needs_wheel
+def test_site_has_a_page_per_design_and_an_index(tmp_path, monkeypatch):
+    for name in webapp.PACKAGES:
+        (tmp_path / name).write_bytes(b"wheel")
+    monkeypatch.setattr(webapp, "CACHE", str(tmp_path))
+    designs = os.path.join(os.path.dirname(__file__), "..", "examples", "designs")
+    files = webapp.site([os.path.join(designs, "sign.py")], str(tmp_path / "site"))
+    assert "index.html" in files and "sign/index.html" in files
+    index = (tmp_path / "site" / "index.html").read_text()
+    assert 'href="sign/"' in index and "a printshop design" in index
