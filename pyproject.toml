@@ -21,7 +21,7 @@ printshop = "printshop.cli:main"
 include = ["printshop*"]
 
 [tool.setuptools.package-data]
-printshop = ["data/**/*"]
+printshop = ["data/**/*", "*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

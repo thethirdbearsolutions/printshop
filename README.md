@@ -15,6 +15,7 @@ printshop jointed RBT-19-P-801 holistic 590 examples/    # the champion with pri
 printshop burrito madison examples/                      # a Chaotic Attack burrito on a stud-grid base, in colour
 printshop figure examples/                               # a brick-system figure and accessories for its hands
 printshop knight examples/                               # sword, shield, helmet, armour, and a Pegasus to ride
+printshop new my-thing.py && printshop studio my-thing.py # design your own: live 3D view, sliders, checks
 printshop drop examples/burrito-madison.stl              # does it stay up? MuJoCo drop test (pip install -e .[sim])
 printshop stand RBT-19-P-801 holistic 590 examples/      # which pose of the jointed champion stands up?
 python -m pytest
@@ -45,6 +46,7 @@ and a shaded PNG preview.
 | `armory.py` | Sword and shield on the bar, a helmet that grips the head's stud, armour that drops over the neck stud. |
 | `pegasus.py` | A winged horse with a two-stud saddle; wings on pins that sweep, and print flat. |
 | `scenes.py` | The figure kitted out, and riding: assembled scenes for previews and fit tests. |
+| `studio.py`, `studio.html` | Design files: a live 3D view in the browser with sliders, checks and downloads. |
 | `colour.py` | Merge a model's colours down to the printer's filament slots (Ward linkage in CIELAB). |
 | `sources/burritos.py` | Chaotic Attack burritos: parts to solids, fused, on a stud-grid base, split by colour. |
 | `tools/burrito-export/` | Node script that builds burritos headlessly (no renderer) and dumps their parts. |
@@ -166,6 +168,31 @@ Tests check the printed sizes (holes come out `xy_compensation` smaller, pegs bi
 drop out of a hand, that the legs swing ±90° on the hips and the arms all the way round without touching
 anything, that the figure stands on a 2x2 plate, and that a retuned profile (a 3.0 mm bar, say) changes
 every fit.
+
+## Designing your own
+
+A design is a Python file with a `design(p, **params)` function. `p` is the printer profile, and every fit
+comes from it. The function returns the print: a solid, or a list of `(name, solid, "#rrggbb")` parts, one per
+colour. `PARAMS = {"height": (14.0, 6.0, 30.0, 0.5), ...}` (default, low, high, step) makes a slider for each.
+
+```bash
+printshop new my-thing.py           # a template: a sign that presses onto studs, with two sliders
+printshop studio my-thing.py        # http://127.0.0.1:8008/ - edit and save the file, the view follows
+printshop view my-thing.py out.html # the same view as one standalone page, to send to someone
+```
+
+The page shows the model first, and each layer is a click further in. Under **Shape** are the sliders, under
+**Checks** whether it is one piece, whether it stands up, and its size, and under **Printer** the profile. STL
+and 3MF downloads come straight from the page. If the design raises an error, the page shows it and keeps the
+last good model on screen, so you can work in your editor (or ask Claude to change the file) and watch the
+result. `examples/designs/` has the template and the Pegasus with its rider (a wing-sweep slider), each with a
+snapshot page.
+
+**Next rung: printshop in the browser, no Python install.** Pyodide (Python compiled to WebAssembly) ships
+numpy and Pillow but not `manifold3d`. manifold does publish its own WebAssembly build (`manifold-3d` on npm,
+the same 3.5.4 printshop uses), and printshop calls only a few dozen of its functions. A small `manifold3d`
+module in Pyodide that passes those calls through to the WebAssembly build would let all of printshop run in
+the page. The studio page is already the viewer it would sit in, with a code editor added beside it.
 
 ## Knight and Pegasus
 
