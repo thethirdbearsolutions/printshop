@@ -1,0 +1,75 @@
+diff -ru -x .pyodide_build -x .git -x '*.pyc' a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2022-11-09 12:37:21.000000000 +0000
++++ b/CMakeLists.txt	2026-10-04 00:53:48.389467771 +0000
+@@ -158,7 +158,8 @@
+   option(CMAKE_BUILD_TYPE "Build type" RelWithDebInfo)
+ endif()
+ 
+-if(EMSCRIPTEN)
++option(MANIFOLD_PYODIDE "Build the Python bindings as a Pyodide extension module" OFF)
++if(EMSCRIPTEN AND NOT MANIFOLD_PYODIDE)
+   message("Building for Emscripten")
+   add_link_options(-sALLOW_MEMORY_GROWTH=1)
+   add_link_options(-sMAXIMUM_MEMORY=4294967296)
+diff -ru -x .pyodide_build -x .git -x '*.pyc' a/bindings/CMakeLists.txt b/bindings/CMakeLists.txt
+--- a/bindings/CMakeLists.txt	2022-11-09 12:37:21.000000000 +0000
++++ b/bindings/CMakeLists.txt	2026-10-04 00:53:48.389788932 +0000
+@@ -20,7 +20,7 @@
+   add_subdirectory(c)
+ endif()
+ 
+-if(NOT EMSCRIPTEN AND MANIFOLD_PYBIND)
++if((NOT EMSCRIPTEN OR MANIFOLD_PYODIDE) AND MANIFOLD_PYBIND)
+   add_subdirectory(python)
+ endif()
+ 
+diff -ru -x .pyodide_build -x .git -x '*.pyc' a/bindings/python/manifold3d.cpp b/bindings/python/manifold3d.cpp
+--- a/bindings/python/manifold3d.cpp	2022-11-09 12:37:21.000000000 +0000
++++ b/bindings/python/manifold3d.cpp	2026-10-04 00:54:33.766405252 +0000
+@@ -576,7 +576,8 @@
+           [](const MeshGL& self) {
+             return nb::ndarray<nb::numpy, const float, nb::c_contig>(
+                 self.vertProperties.data(),
+-                {self.vertProperties.size() / self.numProp, self.numProp},
++                {static_cast<size_t>(self.vertProperties.size() / self.numProp),
++                 static_cast<size_t>(self.numProp)},
+                 nb::handle());
+           },
+           nb::rv_policy::reference_internal)
+@@ -691,7 +692,8 @@
+           [](const MeshGL64& self) {
+             return nb::ndarray<nb::numpy, const double, nb::c_contig>(
+                 self.vertProperties.data(),
+-                {self.vertProperties.size() / self.numProp, self.numProp},
++                {static_cast<size_t>(self.vertProperties.size() / self.numProp),
++                 static_cast<size_t>(self.numProp)},
+                 nb::handle());
+           },
+           nb::rv_policy::reference_internal)
+diff -ru -x .pyodide_build -x .git -x '*.pyc' a/cmake/manifoldDeps.cmake b/cmake/manifoldDeps.cmake
+--- a/cmake/manifoldDeps.cmake	2022-11-09 12:37:21.000000000 +0000
++++ b/cmake/manifoldDeps.cmake	2026-10-04 00:56:10.020340869 +0000
+@@ -209,6 +209,11 @@
+     message("AddressSanitizer detected, Python stub generation disabled")
+   endif()
+ 
++  if(MANIFOLD_PYODIDE)
++    # stubgen imports the module with the build machine's Python, which cannot load a wasm32 module
++    set(MANIFOLD_PYBIND_STUBGEN OFF)
++  endif()
++
+   if(NOT MANIFOLD_USE_BUILTIN_NANOBIND)
+     execute_process(
+       COMMAND "${Python_EXECUTABLE}" -m nanobind --version
+diff -ru -x .pyodide_build -x .git -x '*.pyc' a/pyproject.toml b/pyproject.toml
+--- a/pyproject.toml	2022-11-09 12:37:21.000000000 +0000
++++ b/pyproject.toml	2026-10-04 00:53:20.210766149 +0000
+@@ -45,7 +45,7 @@
+     "oneTBB", # we may have this when we build with cibuildwheel
+ ]
+ wheel.packages = ["manifold3d"]
+-cmake.args = ["-DMANIFOLD_PYBIND=ON", "-DMANIFOLD_CBIND=OFF", "-DMANIFOLD_PAR=ON", "-DMANIFOLD_TEST=OFF", "-DBUILD_SHARED_LIBS=OFF"]
++cmake.args = ["-DMANIFOLD_PYBIND=ON", "-DMANIFOLD_CBIND=OFF", "-DMANIFOLD_PAR=OFF", "-DMANIFOLD_TEST=OFF", "-DBUILD_SHARED_LIBS=OFF"]
+ install.components = ["bindings"]
+ 
+ [tool.cibuildwheel]

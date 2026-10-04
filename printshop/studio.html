@@ -45,6 +45,9 @@
     background: var(--panel); border: 1px solid var(--bad); border-radius: 12px; padding: 10px 12px;
     font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; color: var(--bad); }
   .note { color: var(--muted); font-size: 12px; }
+  textarea { width: 100%; min-height: 260px; margin-top: 8px; resize: vertical; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: 12px/1.45 ui-monospace, monospace; tab-size: 4; }
+  #panel.wide { width: 420px; }
   @media (max-width: 640px) {
     #panel { top: auto; bottom: 0; right: 0; left: 0; width: auto; max-height: 45%; border-radius: 12px 12px 0 0; }
     #error { right: 12px; bottom: 47%; }
@@ -59,9 +62,12 @@
 <div id="stage"></div>
 <aside id="panel">
   <h1 id="title">printshop studio</h1>
-  <div class="sub" id="sub">drag to turn · scroll to zoom</div>
+  <div class="sub" id="sub">drag to turn · scroll to zoom · double-click to frame</div>
   <details id="shape" open><summary>Shape <span class="hint" id="shape-hint"></span></summary><div id="params"></div></details>
   <details id="checks"><summary>Checks <span class="hint" id="checks-hint">…</span></summary><dl id="report"></dl></details>
+  <details id="codebox" hidden><summary>Code <span class="hint">runs in this page</span></summary>
+    <textarea id="source" spellcheck="false"></textarea>
+    <div class="buttons"><button id="run">Run (Ctrl+Enter)</button></div></details>
   <details id="printer"><summary>Printer <span class="hint" id="printer-hint"></span></summary>
     <div class="row"><label>Profile: every fit comes from it</label><select id="profile"></select></div></details>
   <div class="buttons"><button id="stl">Download STL</button><a class="btn" id="mf" href="#">Download 3MF</a></div>
@@ -127,8 +133,12 @@ function show(data) {
     ["pieces", c.pieces], ["stands up", c.stands ? `yes, ${c.stability_margin_mm} mm in` : "no", c.stands],
     ["size", c.size_mm.join(" × ") + " mm"], ["volume", c.volume_cm3 + " cm³"], ["parts", c.parts.join(", ")],
   ].map(([k, v, good]) => `<dt>${k}</dt><dd class="${good === undefined ? "" : good ? "ok" : "no"}">${v}</dd>`).join("");
-  if (!framed) frame();
+  const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).length();
+  if (!framed || size > 1.3 * lastSize || size < 0.6 * lastSize) frame();  // much bigger or smaller: look again
+  lastSize = size;
 }
+let lastSize = 0;
+renderer.domElement.addEventListener("dblclick", frame);
 
 function frame() {
   const box = new THREE.Box3().setFromObject(model);
@@ -151,23 +161,89 @@ function sliders(params) {
     const row = document.createElement("div");
     row.className = "row";
     row.innerHTML = `<label><span>${k.replaceAll("_", " ")}</span><output>${values[k]}</output></label>
-      <input type="range" min="${lo}" max="${hi}" step="${step}" value="${values[k]}" ${BOOT.live ? "" : "disabled"}>`;
+      <input type="range" min="${lo}" max="${hi}" step="${step}" value="${values[k]}" ${interactive() ? "" : "disabled"}>`;
     const input = row.querySelector("input"), out = row.querySelector("output");
     input.addEventListener("input", () => { values[k] = +input.value; out.textContent = input.value; later(fetchModel); });
     $("params").appendChild(row);
   }
-  if (!BOOT.live && keys.length) $("params").insertAdjacentHTML("beforeend",
-    `<p class="note">A snapshot: run <code>printshop studio ${BOOT.title}</code> to move these.</p>`);
+  if (!interactive() && keys.length) $("params").insertAdjacentHTML("beforeend", BOOT.engine === "pyodide"
+    ? `<p class="note">Loading Python in this page; the sliders wake up when it is ready.</p>`
+    : `<p class="note">A snapshot: run <code>printshop studio ${BOOT.title}</code> to move these.</p>`);
 }
 
 let timer;
 const later = (f) => { clearTimeout(timer); timer = setTimeout(f, 150); };
 const query = () => `params=${encodeURIComponent(JSON.stringify(values))}&profile=${$("profile").value}`;
 
+let py = null;  // Pyodide, when the design runs in this page
+const interactive = () => BOOT.live || py !== null;
+
 async function fetchModel() {
+  if (py) {
+    py.globals.set("_params", JSON.stringify(values));
+    py.globals.set("_profile", $("profile").value);
+    show(JSON.parse(await py.runPythonAsync("json.dumps(studio.payload(DESIGN, _profile, json.loads(_params)))")));
+    return;
+  }
   show(await (await fetch(`/model?${query()}`)).json());
   $("mf").href = `/download.3mf?${query()}`;
 }
+
+function save(bytes, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
+  a.download = name;
+  a.click();
+}
+
+async function bootPython() {  // the design runs here: Pyodide, numpy, Pillow, manifold3d, printshop
+  const say = (t) => { $("sub").textContent = t; };
+  say("loading Python…");
+  await new Promise((ok, no) => { const s = document.createElement("script"); s.src = BOOT.pyodide + "pyodide.js";
+    s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+  const p = await loadPyodide({ indexURL: BOOT.pyodide });
+  say("loading numpy, Pillow and manifold…");
+  await p.loadPackage(BOOT.wheels.map((w) => new URL(w, location.href).href));
+  const zip = await (await fetch(BOOT.source_zip)).arrayBuffer();
+  const site = p.runPython("import site; site.getsitepackages()[0]");
+  p.unpackArchive(zip, "zip", { extractDir: site });
+  p.FS.mkdirTree("/work");
+  p.FS.writeFile("/work/design.py", BOOT.source);
+  await p.runPythonAsync("import json\nfrom printshop import studio\nDESIGN = '/work/design.py'");
+  py = p;
+  say("running in this page · drag to turn · scroll to zoom");
+  $("codebox").hidden = false;
+  $("source").value = BOOT.source;
+  $("profile").disabled = false;
+  $("mf").style.display = "";
+  sliders(BOOT.params);
+  await fetchModel();
+}
+
+async function runSource() {  // the code box: save the design, re-read its sliders, run it
+  py.FS.writeFile("/work/design.py", $("source").value);
+  try {
+    const params = JSON.parse(await py.runPythonAsync("json.dumps(studio.params_of(DESIGN))"));
+    if (JSON.stringify(Object.keys(params)) !== JSON.stringify(Object.keys(BOOT.params))) { values = {}; }
+    BOOT.params = params;
+    sliders(params);
+  } catch (e) { /* a syntax error: the run below shows it */ }
+  await fetchModel();
+}
+$("run").addEventListener("click", runSource);
+$("source").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runSource(); }
+  if (e.key === "Tab") { e.preventDefault(); document.execCommand("insertText", false, "    "); }
+});
+$("codebox").addEventListener("toggle", () => $("panel").classList.toggle("wide", $("codebox").open));
+$("mf").addEventListener("click", async (e) => {
+  if (!py) return;  // served live: the link downloads from the studio
+  e.preventDefault();
+  py.globals.set("_params", JSON.stringify(values));
+  py.globals.set("_profile", $("profile").value);
+  const bytes = await py.runPythonAsync("studio.downloads(DESIGN, _profile, json.loads(_params), '3mf')");
+  save(bytes.toJs(), BOOT.title.replace(/\.py$/, ".3mf"));
+});
 
 $("stl").addEventListener("click", () => {  // binary STL of what is on screen, written here
   const tris = [];
@@ -178,10 +254,7 @@ $("stl").addEventListener("click", () => {  // binary STL of what is on screen, 
   const n = tris.length / 9, buf = new DataView(new ArrayBuffer(84 + 50 * n));
   buf.setUint32(80, n, true);
   for (let t = 0; t < n; t++) for (let v = 0; v < 9; v++) buf.setFloat32(84 + 50 * t + 12 + 4 * v, tris[9 * t + v], true);
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([buf], { type: "model/stl" }));
-  a.download = BOOT.title.replace(/\.py$/, ".stl");
-  a.click();
+  save(buf.buffer, BOOT.title.replace(/\.py$/, ".stl"));
 });
 
 $("title").textContent = BOOT.title;
@@ -208,6 +281,11 @@ if (BOOT.live) {
   $("mf").style.display = "none";
   $("sub").textContent = "a snapshot · drag to turn · scroll to zoom";
   show(BOOT.model);
+  if (BOOT.engine === "pyodide") bootPython().catch((e) => {
+    $("sub").textContent = "Python did not load here: this is a snapshot";
+    $("error").style.display = "block";
+    $("error").textContent = String(e);
+  });
 }
 </script>
 </body>

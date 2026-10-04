@@ -12,6 +12,7 @@
     printshop new NAME.py                                start a design file (a template with sliders)
     printshop studio NAME.py [--port 8008]               live 3D view of a design file, sliders and checks
     printshop view NAME.py OUT.html                      the same view as one standalone page
+    printshop web NAME.py OUT_DIR                        a page that runs printshop itself, in the browser
     printshop stand RUN KIND GEN OUT_DIR                 which pose of a jointed champion stands up?
 """
 from __future__ import annotations
@@ -61,6 +62,7 @@ def main(argv=None) -> None:
     nw = sub.add_parser("new"); nw.add_argument("file")
     sd = sub.add_parser("studio"); sd.add_argument("file"); sd.add_argument("--port", type=int, default=8008)
     vw = sub.add_parser("view"); vw.add_argument("file"); vw.add_argument("out"); vw.add_argument("--profile", default="fdm-0.4")
+    wb = sub.add_parser("web"); wb.add_argument("file"); wb.add_argument("out"); wb.add_argument("--profile", default="fdm-0.4")
     kn = sub.add_parser("knight"); kn.add_argument("out"); kn.add_argument("--profile", default="fdm-0.4")
     dr = sub.add_parser("drop"); dr.add_argument("stl"); dr.add_argument("--trials", type=int, default=8)
     dr.add_argument("--height", type=float, default=20.0, help="mm above the floor")
@@ -130,6 +132,10 @@ def main(argv=None) -> None:
             with open(a.out, "w") as f:
                 f.write(studio.page(a.file, static=True, profile=a.profile))
             print(f"wrote {a.out}")
+    elif a.cmd == "web":
+        from .webapp import build
+
+        print("\n".join(os.path.join(a.out, f) for f in build(a.file, a.out, a.profile)))
     elif a.cmd == "knight":
         _knight(a.out, profile)
     elif a.cmd == "figure":

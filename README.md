@@ -188,11 +188,26 @@ last good model on screen, so you can work in your editor (or ask Claude to chan
 result. `examples/designs/` has the template and the Pegasus with its rider (a wing-sweep slider), each with a
 snapshot page.
 
-**Next rung: printshop in the browser, no Python install.** Pyodide (Python compiled to WebAssembly) ships
-numpy and Pillow but not `manifold3d`. manifold does publish its own WebAssembly build (`manifold-3d` on npm,
-the same 3.5.4 printshop uses), and printshop calls only a few dozen of its functions. A small `manifold3d`
-module in Pyodide that passes those calls through to the WebAssembly build would let all of printshop run in
-the page. The studio page is already the viewer it would sit in, with a code editor added beside it.
+### In the browser, with no install
+
+`printshop web my-thing.py SITE/` writes a folder that runs printshop itself in the page, with Pyodide (Python
+compiled to WebAssembly). It shows a snapshot at once, then loads Python (about 6 s). After that the sliders,
+the profile, the downloads and a **Code** box all run in the browser, and Ctrl+Enter re-runs your edits. Host the
+folder anywhere that serves plain files, or try it with `python -m http.server --directory SITE`. Pyodide comes
+from the jsdelivr CDN; numpy, Pillow, manifold3d and printshop come from the folder (about 5 MB).
+
+That needs manifold3d built for Pyodide, which upstream does not ship. `tools/pyodide/build.sh` builds it
+(Pyodide 0.29.5: Python 3.13, Emscripten 4.0.9) from the PyPI source and `manifold3d-3.5.4-pyodide.patch`.
+The patch is small:
+- an option, `MANIFOLD_PYODIDE`, that builds the Python bindings under Emscripten;
+- no stub generation;
+- the multi-core (TBB) backend off;
+- two `size_t` casts for 32-bit WebAssembly.
+
+The wheel (389 KB) is in `tools/pyodide/dist/`. In Pyodide it gives exactly the native results: the same
+volumes, genus, checks and colour groups. It runs about 3-6x slower (the sign template in 0.07 s, Madison the
+burrito in 4 s). `tools/pyodide/check_page.cjs` drives a built page in headless Chromium: Python boots, a slider
+and a code edit re-run the design, and an error is shown rather than thrown.
 
 ## Knight and Pegasus
 
