@@ -3,6 +3,8 @@
     printshop card OUT_DIR [--profile fdm-0.4]          tolerance card: 2x2 plates sweeping stud/tube fit
     printshop brick WxL OUT.stl [--plates 3]             one brick (3 plates) or plate (1)
     printshop joints OUT_DIR [--profile fdm-0.4]         print-in-place hinge and ball joint test pieces
+    printshop burrito DUMP.json... OUT_DIR [--height 40] [--colors 4] [--no-base]
+                                                         Chaotic Attack burritos (dumped by tools/dump_burrito.mts)
 """
 from __future__ import annotations
 
@@ -11,6 +13,7 @@ import json
 import os
 
 from .bricks import brick, tolerance_card
+from .burrito import figure, load as load_dump
 from .checks import check
 from .export import write_3mf, write_stl
 from .joints import ball_joint, hinge
@@ -33,6 +36,11 @@ def main(argv=None) -> None:
     b = sub.add_parser("brick"); b.add_argument("size"); b.add_argument("out"); b.add_argument("--plates", type=int, default=3)
     b.add_argument("--profile", default="fdm-0.4")
     j = sub.add_parser("joints"); j.add_argument("out"); j.add_argument("--profile", default="fdm-0.4")
+    u = sub.add_parser("burrito"); u.add_argument("dumps", nargs="+"); u.add_argument("out")
+    u.add_argument("--height", type=float, default=40.0, help="figure height in mm, not counting the base")
+    u.add_argument("--colors", type=int, default=4, help="most filament colours to use (the AMS holds 4)")
+    u.add_argument("--no-base", action="store_true", help="no stud-grid base")
+    u.add_argument("--profile", default="fdm-0.4")
     a = ap.parse_args(argv)
     profile = PROFILES[a.profile]
 
@@ -50,6 +58,18 @@ def main(argv=None) -> None:
         s, ball = ball_joint(profile=profile)
         _emit([("hinge-a", h_a), ("hinge-b", h_b), ("socket", s.translate([30, 0, 0])), ("ball", ball.translate([30, 0, 0]))],
               os.path.join(a.out, f"joint-gauge-{profile.name}"))
+    elif a.cmd == "burrito":
+        os.makedirs(a.out, exist_ok=True)
+        for path in a.dumps:
+            fig = figure(load_dump(path), height_mm=a.height, max_colours=a.colors,
+                         with_base=not a.no_base, profile=profile)
+            stem = os.path.join(a.out, os.path.splitext(os.path.basename(path))[0])
+            write_stl([m for _, m, _ in fig.objects], stem + ".stl")
+            write_3mf(fig.objects, stem + ".3mf")
+            render([(m, c) for _, m, c in fig.objects], stem + ".png")
+            print(f"{fig.name}: wrote {stem}.3mf / .stl / .png")
+            for note in fig.notes:
+                print("  - " + note)
 
 
 if __name__ == "__main__":

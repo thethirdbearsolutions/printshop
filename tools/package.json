@@ -1,0 +1,7 @@
+{
+  "name": "printshop-tools",
+  "private": true,
+  "type": "module",
+  "description": "Node helpers that read models out of our three.js games for printshop.",
+  "devDependencies": { "tsx": "^4.19.0" }
+}

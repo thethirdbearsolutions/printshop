@@ -61,8 +61,9 @@ def closest_points(a: Manifold, b: Manifold):
     va = a.to_mesh().vert_properties[:, :3]
     vb = b.to_mesh().vert_properties[:, :3]
     best = (np.inf, None, None)
-    for i in range(0, len(va), 2048):
-        chunk = va[i:i + 2048]
+    step = max(1, 4_000_000 // max(len(vb), 1))  # keep each distance block to ~100 MB
+    for i in range(0, len(va), step):
+        chunk = va[i:i + step]
         dist = np.linalg.norm(chunk[:, None, :] - vb[None, :, :], axis=2)
         j = np.unravel_index(np.argmin(dist), dist.shape)
         if dist[j] < best[0]:

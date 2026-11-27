@@ -12,6 +12,35 @@ printshop brick 2x4 brick.stl       # a 2x4 brick (--plates 1 for a plate)
 pytest
 ```
 
+## Burritos
+
+Chaotic Attack burritos print as multi-colour figures on a stud-grid base that clicks onto a plate.
+Two steps: dump the game's three.js models, then build solids from the dump.
+
+```bash
+(cd ../chaotic-attack && npm install)          # once, so `three` resolves
+(cd tools && npm install)                      # once: tsx
+tools/node_modules/.bin/tsx tools/dump_burrito.mts ../chaotic-attack --all --out burritos/   # or name kinds: yuri madison
+printshop burrito burritos/*.json prints/      # --height 40 (mm, figure only) --colors 4 --no-base
+```
+
+Each burrito gets a 3MF (one object per colour plus the base, colours already assigned), an STL and a
+PNG preview, and prints notes on what it changed to make the model printable:
+
+- **Open surfaces** (capes, half-torus smiles, hoods) become shells `min_wall` thick; closed parts
+  thinner than that (an extruded bolt) are stretched to `min_wall` along their thin direction.
+- **Floating parts** (a staff held beside a hand, eyes that hover a hair off the wrap) get a short
+  strut in their own colour; specks too small to print are dropped.
+- **Overlaps** are resolved smallest-part-wins, so eyes and pins cut into the wrap.
+- **Colours** merge (closest in L\*a\*b\*, smaller into larger) down to `--colors`, 4 for an AMS. The
+  base shares the figure's darkest filament, so it costs no extra slot.
+- **Textured wraps** (rainbow, sweater, leopard, swirl) print in the texture's dominant colour: the
+  dump has no real canvas, so a stand-in counts how much area each fill colour paints.
+
+All 21 burritos export (about 1–3 s each at 40 mm). Thin details such as sprinkles and heart pins
+are at the edge of a 0.4 mm nozzle at that size; `--height 60` helps.
+```
+
 Each command writes an STL (all parts), a 3MF (separate named, coloured objects for multi-colour printers)
 and a shaded PNG preview.
 
@@ -23,6 +52,7 @@ and a shaded PNG preview.
 | `bricks.py` | Bricks and plates on the common 8 mm stud grid; tolerance card. |
 | `joints.py` | Print-in-place hinge and captured ball-and-socket (with a cone limit). |
 | `checks.py` | One piece? Stands up (centre of mass inside the footprint, with margin)? Size, volume. |
+| `burrito.py` | Chaotic Attack burritos from a model dump: thicken, strut, resolve overlaps, merge colours, seat on a base. |
 | `export.py` | Binary STL and multi-object, multi-colour 3MF. |
 | `preview.py` | Software-rendered PNG previews (no GPU or Blender needed). |
 
@@ -40,9 +70,8 @@ profile's clearance, and that a hinge leaf or a ball cannot be pulled out.
 ## Roadmap
 
 1. **Calibrate** on the first printer (above).
-2. **Burritos.** Export Chaotic Attack characters from `buildBurrito()` (three.js primitives) as parts and
-   colours, thicken zero-thickness planes, fuse, and give them a socket base that fits the stud grid, so they
-   stand on a plate. Multi-colour 3MF.
+2. ~~**Burritos.**~~ Done: `tools/dump_burrito.mts` + `printshop burrito` (above). Next: print one, check
+   the base's clutch and the thinnest details, and tune the defaults.
 3. **Brick-system figures and accessories.** Hands that grip the 3.2 mm bar, accessories built on that bar,
    heads on studs, hip pins.
 4. **Articulated rabbitstew champions.** Bodies come from `build_model()`; each joint becomes a printed joint
